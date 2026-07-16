@@ -1,0 +1,230 @@
+---
+/**
+ * Hero.astro — Cinematic full-bleed hero section
+ * Displays the most recently published article.
+ * Features: parallax scroll, fade-in on load, dark gradient overlay.
+ */
+import { getArticleUrl, COLLECTION_NAMES, type Article } from '../lib/cms';
+
+interface Props {
+  article: Article;
+}
+
+const { article } = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+}).format(new Date(article._createdDate));
+
+// Derive section label from collectionId
+const sectionLabel = article.collectionSlug
+  ? (COLLECTION_NAMES[article.collectionSlug] ?? article.collectionSlug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
+  : (article.collectionId?.replace(/([a-z])([A-Z])/g, '$1 $2') ?? 'The Suture');
+
+const articleHref = getArticleUrl(article);
+---
+
+<section class="hero" aria-label="Featured article">
+  <!-- Background image (parallax target) -->
+  <div class="hero__bg" id="hero-bg" aria-hidden="true">
+    {article.coverImage ? (
+      <img
+        src={article.coverImage}
+        alt=""
+        class="hero__img"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+      />
+    ) : (
+      <div class="hero__placeholder"></div>
+    )}
+    <!-- Gradient overlay -->
+    <div class="hero__gradient" aria-hidden="true"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="hero__content container" id="hero-content">
+    <div class="hero__inner">
+      <p class="hero__eyebrow eyebrow" data-hero-reveal="eyebrow">{sectionLabel}</p>
+
+      <h1 class="hero__title" data-hero-reveal="title">
+        <a href={articleHref} class="hero__title-link">{article.title}</a>
+      </h1>
+
+      {article.author && (
+        <p class="hero__byline" data-hero-reveal="byline">
+          By {article.author}
+          <span class="hero__byline-sep" aria-hidden="true">·</span>
+          <time datetime={article._createdDate}>{formattedDate}</time>
+        </p>
+      )}
+
+      <a href={articleHref} class="hero__read-btn" data-hero-reveal="cta" aria-label={`Read ${article.title}`}>
+        Read Story
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Entry animation — staggered reveal
+  const revealEls = document.querySelectorAll('[data-hero-reveal]');
+  const delays: Record<string, number> = {
+    eyebrow: 100,
+    title: 250,
+    byline: 450,
+    cta: 600,
+  };
+
+  revealEls.forEach((el) => {
+    const key = (el as HTMLElement).dataset.heroReveal ?? '';
+    const delay = delays[key] ?? 0;
+    (el as HTMLElement).style.transitionDelay = delay + 'ms';
+    el.classList.add('hero-reveal-init');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add('hero-reveal-in');
+      });
+    });
+  });
+
+  // Parallax on scroll
+  const bg = document.getElementById('hero-bg');
+  const onScroll = () => {
+    if (!bg) return;
+    const offset = window.scrollY;
+    if (offset < window.innerHeight) {
+      bg.style.transform = `translateY(${offset * 0.35}px)`;
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 100svh;
+    min-height: 560px;
+    max-height: 900px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: clamp(3rem, 7vh, 6rem);
+  }
+
+  /* Background */
+  .hero__bg {
+    position: absolute;
+    inset: -10% 0 -10%;
+    will-change: transform;
+  }
+
+  .hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+
+  .hero__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a18 0%, #2d2b27 50%, #1a1a18 100%);
+  }
+
+  .hero__gradient {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(10, 10, 8, 0.88) 0%, rgba(10, 10, 8, 0.45) 45%, rgba(10, 10, 8, 0.1) 75%, transparent 100%);
+  }
+
+  /* Content */
+  .hero__content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .hero__inner {
+    max-width: 760px;
+  }
+
+  .hero__eyebrow {
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .hero__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-4xl);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: #FAFAF8;
+    margin-bottom: var(--space-6);
+  }
+
+  .hero__title-link {
+    display: block;
+    transition: opacity var(--dur-fast);
+  }
+  .hero__title-link:hover { opacity: 0.85; }
+
+  .hero__byline {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 400;
+    color: rgba(250, 250, 248, 0.7);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-8);
+  }
+
+  .hero__byline-sep { opacity: 0.5; }
+
+  .hero__read-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: #FAFAF8;
+    border: 1.5px solid rgba(250, 250, 248, 0.6);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-sm);
+    transition:
+      background var(--dur-fast),
+      border-color var(--dur-fast),
+      gap var(--dur-fast);
+  }
+  .hero__read-btn:hover {
+    background: rgba(250, 250, 248, 0.12);
+    border-color: #FAFAF8;
+    gap: var(--space-3);
+  }
+
+  /* Reveal animation classes */
+  .hero-reveal-init {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity var(--dur-slower) var(--ease-out-expo),
+      transform var(--dur-slower) var(--ease-out-expo);
+  }
+
+  .hero-reveal-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

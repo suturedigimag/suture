@@ -1,0 +1,421 @@
+---
+/**
+ * Nav.astro — The Suture sticky navigation + mega menu
+ *
+ * Layout:
+ *   Left: "The Suture" logotype
+ *   Center: Section links with mega menu dropdowns
+ *   Right: "Subscribe" / "Write for Us" CTA
+ *
+ * Behavior:
+ *   - Transparent on hero, opaque after 80px scroll
+ *   - Mega menu opens on hover with sub-collection previews
+ */
+const isHome = Astro.url.pathname === '/suture' || Astro.url.pathname === '/suture/';
+---
+
+<header class={`nav-header ${!isHome ? 'nav-header--solid nav-header--scrolled' : ''}`} id="site-nav" role="banner">
+  <nav class="nav" aria-label="Main navigation">
+
+    <!-- Logotype -->
+    <a href="/suture" class="nav__logo-link" aria-label="The Suture — Home">
+      <img src="/images/logo.png" alt="The Suture Logotype" class="nav__logo-img" />
+    </a>
+
+    <!-- Center links -->
+    <ul class="nav__links" role="list">
+
+      <li class="nav__item">
+        <a href="/suture" class="nav__link">Home</a>
+      </li>
+
+      <!-- Sections mega menu -->
+      <li class="nav__item nav__item--has-menu">
+        <a href="/suture/sections" class="nav__link" aria-haspopup="true" aria-expanded="false">
+          Sections
+        </a>
+        <div class="mega-menu" role="region" aria-label="Sections sub-menu">
+          <div class="mega-menu__inner container">
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Clinical</p>
+              <ul role="list">
+                <li><a href="/suture/sections/clinical-case-corner" class="mega-menu__link">Clinical Case Corner</a></li>
+                <li><a href="/suture/sections/decrypt-and-diagnose" class="mega-menu__link">Decrypt &amp; Diagnose</a></li>
+                <li><a href="/suture/sections/department-spotlight" class="mega-menu__link">Department Spotlight</a></li>
+              </ul>
+            </div>
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Wellness &amp; Research</p>
+              <ul role="list">
+                <li><a href="/suture/sections/healers-wellness" class="mega-menu__link">Healers Wellness</a></li>
+                <li><a href="/suture/sections/research-resource" class="mega-menu__link">Research Resource</a></li>
+                <li><a href="/suture/sections/world-health" class="mega-menu__link">World Health</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- Campus Chronicles mega menu -->
+      <li class="nav__item nav__item--has-menu">
+        <a href="/suture/campus-chronicles" class="nav__link" aria-haspopup="true" aria-expanded="false">
+          Campus Chronicles
+        </a>
+        <div class="mega-menu" role="region" aria-label="Campus Chronicles sub-menu">
+          <div class="mega-menu__inner container">
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Campus Life</p>
+              <ul role="list">
+                <li><a href="/suture/campus-chronicles/clubs" class="mega-menu__link">Clubs</a></li>
+                <li><a href="/suture/campus-chronicles/cultural" class="mega-menu__link">Cultural</a></li>
+                <li><a href="/suture/campus-chronicles/ncc" class="mega-menu__link">NCC</a></li>
+              </ul>
+            </div>
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Achievement</p>
+              <ul role="list">
+                <li><a href="/suture/campus-chronicles/sports" class="mega-menu__link">Sports</a></li>
+                <li><a href="/suture/campus-chronicles/student-achievements" class="mega-menu__link">Student Achievements</a></li>
+                <li><a href="/suture/campus-chronicles/yrc" class="mega-menu__link">YRC</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <!-- Beyond The Books mega menu -->
+      <li class="nav__item nav__item--has-menu">
+        <a href="/suture/beyond-the-books" class="nav__link" aria-haspopup="true" aria-expanded="false">
+          Beyond The Books
+        </a>
+        <div class="mega-menu" role="region" aria-label="Beyond the Books sub-menu">
+          <div class="mega-menu__inner container">
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Creative</p>
+              <ul role="list">
+                <li><a href="/suture/beyond-the-books/artwork" class="mega-menu__link">Artwork</a></li>
+                <li><a href="/suture/beyond-the-books/photography" class="mega-menu__link">Photography</a></li>
+              </ul>
+            </div>
+            <div class="mega-menu__col">
+              <p class="mega-menu__label">Writing</p>
+              <ul role="list">
+                <li><a href="/suture/beyond-the-books/creative-writing" class="mega-menu__link">Creative Writing</a></li>
+                <li><a href="/suture/beyond-the-books/poetry" class="mega-menu__link">Poetry</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </li>
+
+      <li class="nav__item">
+        <a href="/suture/about" class="nav__link">About</a>
+      </li>
+
+      <li class="nav__item">
+        <a href="/suture/about#board" class="nav__link">Team</a>
+      </li>
+
+      <li class="nav__item">
+        <a href="/" class="nav__link">Literature Club</a>
+      </li>
+
+    </ul>
+
+    <!-- Right CTA -->
+    <a href="/suture/write-for-us" class="nav__cta" id="nav-write-cta">
+      Write for Us
+    </a>
+
+    <!-- Mobile hamburger -->
+    <button class="nav__hamburger" id="nav-hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <ul role="list" class="mobile-menu__links">
+      <li><a href="/suture" class="mobile-menu__link">Home</a></li>
+      <li><a href="/suture/sections" class="mobile-menu__link">Sections</a></li>
+      <li><a href="/suture/campus-chronicles" class="mobile-menu__link">Campus Chronicles</a></li>
+      <li><a href="/suture/beyond-the-books" class="mobile-menu__link">Beyond The Books</a></li>
+      <li><a href="/suture/about" class="mobile-menu__link">About</a></li>
+      <li><a href="/suture/about#board" class="mobile-menu__link">Team</a></li>
+      <li><a href="/" class="mobile-menu__link">Literature Club</a></li>
+      <li><a href="/suture/write-for-us" class="mobile-menu__link mobile-menu__link--accent">Write for Us</a></li>
+    </ul>
+  </div>
+</header>
+
+<script>
+  // Scroll behaviour — transparent → opaque
+  const header = document.getElementById('site-nav');
+  const THRESHOLD = 80;
+
+  const isHome = window.location.pathname === '/suture' || window.location.pathname === '/suture/';
+  const updateNav = () => {
+    if (!header) return;
+    if (!isHome || window.scrollY > THRESHOLD) {
+      header.classList.add('nav-header--scrolled');
+    } else {
+      header.classList.remove('nav-header--scrolled');
+    }
+  };
+
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
+
+  // Mobile menu toggle
+  const hamburger = document.getElementById('nav-hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  hamburger?.addEventListener('click', () => {
+    const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+    hamburger.setAttribute('aria-expanded', String(!isOpen));
+    mobileMenu?.setAttribute('aria-hidden', String(isOpen));
+    mobileMenu?.classList.toggle('mobile-menu--open', !isOpen);
+    hamburger.classList.toggle('nav__hamburger--open', !isOpen);
+  });
+</script>
+
+<style>
+  /* ── Header shell ───────────────────────────────────────────── */
+  .nav-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    transition:
+      background var(--dur-normal) var(--ease-in-out),
+      box-shadow var(--dur-normal) var(--ease-in-out),
+      border-color var(--dur-normal) var(--ease-in-out);
+    border-bottom: 1px solid transparent;
+  }
+
+  .nav-header--solid {
+    background: var(--color-bg) !important;
+    border-bottom-color: var(--color-border) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .nav-header--scrolled {
+    background: rgba(250, 250, 248, 0.94);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    border-bottom-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── Nav row ────────────────────────────────────────────────── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    height: 80px;
+    gap: var(--space-8);
+  }
+
+  .nav__logo-link {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    flex-shrink: 0;
+  }
+
+  .nav__logo-img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+    transition: opacity var(--dur-fast);
+  }
+
+  .nav__logo-link:hover .nav__logo-img {
+    opacity: 0.8;
+  }
+
+  /* ── Center links ───────────────────────────────────────────── */
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav__item {
+    position: relative;
+  }
+
+  .nav__link {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-sm);
+    transition: color var(--dur-fast), background var(--dur-fast);
+    white-space: nowrap;
+  }
+
+  .nav__link:hover,
+  .nav__item--has-menu:hover .nav__link {
+    color: var(--color-text-primary);
+    background: var(--color-surface-hover);
+  }
+
+  /* ── Right CTA ──────────────────────────────────────────────── */
+  .nav__cta {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    padding: var(--space-2) var(--space-5);
+    border: 1.5px solid var(--color-text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition:
+      background var(--dur-fast),
+      color var(--dur-fast);
+  }
+  .nav__cta:hover {
+    background: var(--color-text-primary);
+    color: var(--color-bg);
+  }
+
+  /* ── Mega menu ──────────────────────────────────────────────── */
+  .mega-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 360px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-6);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-8px);
+    transition:
+      opacity var(--dur-normal) var(--ease-out-expo),
+      transform var(--dur-normal) var(--ease-out-expo),
+      visibility var(--dur-normal);
+    pointer-events: none;
+  }
+
+  .nav__item--has-menu:hover .mega-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
+  .mega-menu__inner {
+    display: flex;
+    gap: var(--space-8);
+    padding-inline: 0;
+    max-width: none;
+  }
+
+  .mega-menu__col {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .mega-menu__label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-widest);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-3);
+  }
+
+  .mega-menu__link {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    padding-block: var(--space-2);
+    border-radius: var(--radius-sm);
+    padding-inline: var(--space-2);
+    transition: color var(--dur-fast), background var(--dur-fast), padding-left var(--dur-fast);
+  }
+  .mega-menu__link:hover {
+    color: var(--color-accent);
+    background: var(--color-accent-muted);
+    padding-left: var(--space-3);
+  }
+
+  /* ── Hamburger ──────────────────────────────────────────────── */
+  .nav__hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+  }
+
+  .nav__hamburger span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-text-primary);
+    border-radius: 2px;
+    transition: transform var(--dur-normal), opacity var(--dur-fast);
+  }
+
+  .nav__hamburger--open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav__hamburger--open span:nth-child(2) { opacity: 0; }
+  .nav__hamburger--open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── Mobile menu ────────────────────────────────────────────── */
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-6) var(--gutter);
+    gap: var(--space-1);
+  }
+
+  .mobile-menu--open {
+    display: flex;
+  }
+
+  .mobile-menu__links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .mobile-menu__link {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    transition: color var(--dur-fast);
+  }
+  .mobile-menu__link:hover { color: var(--color-text-primary); }
+  .mobile-menu__link--accent { color: var(--color-accent); border-bottom: none; }
+
+  /* ── Responsive ─────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .nav__links, .nav__cta { display: none; }
+    .nav__hamburger { display: flex; }
+  }
+</style>

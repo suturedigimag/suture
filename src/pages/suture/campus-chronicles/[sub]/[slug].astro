@@ -1,0 +1,38 @@
+---
+/**
+ * Campus Chronicles article page — /suture/campus-chronicles/[sub]/[slug]
+ * SSR: always fresh from CMS
+ */
+export const prerender = false;
+
+import ArticleLayout from '../../../../layouts/ArticleLayout.astro';
+import { getArticleBySlug, getArticles, renderRichContent, CAMPUS_ROUTE_MAP, COLLECTION_NAMES } from '../../../../lib/cms';
+
+const { sub, slug } = Astro.params as { sub: string; slug: string };
+
+const collectionId = CAMPUS_ROUTE_MAP[sub];
+if (!collectionId) return Astro.redirect('/suture/campus-chronicles');
+
+const [article, relatedRaw] = await Promise.all([
+  getArticleBySlug(collectionId, slug),
+  getArticles(collectionId, 4),
+]);
+
+if (!article) return Astro.redirect('/suture/campus-chronicles/' + sub);
+
+const related = relatedRaw.filter((a) => a.slug !== slug);
+const sectionName = COLLECTION_NAMES[sub] ?? sub;
+---
+
+<ArticleLayout
+  article={article}
+  relatedArticles={related}
+  sectionName={sectionName}
+  sectionHref={`/suture/campus-chronicles/${sub}`}
+>
+  {article.body ? (
+    <div set:html={renderRichContent(article.body)} />
+  ) : (
+    <p style="color: var(--color-text-tertiary);">Article content is not available.</p>
+  )}
+</ArticleLayout>

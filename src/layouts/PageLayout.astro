@@ -1,0 +1,25 @@
+---
+/**
+ * PageLayout.astro — Standard page wrapper
+ * Includes Nav and Footer, wraps main content.
+ */
+import Base from './Base.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description, ogImage } = Astro.props;
+---
+
+<Base title={title} description={description} ogImage={ogImage}>
+  <Nav />
+  <main id="main-content">
+    <slot />
+  </main>
+  <Footer />
+</Base>

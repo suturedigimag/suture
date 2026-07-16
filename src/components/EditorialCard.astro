@@ -1,0 +1,196 @@
+---
+/**
+ * EditorialCard.astro — Reusable article card
+ * Used in SectionStrip, section landing pages, and search results.
+ *
+ * Variants: 'default' | 'featured' | 'compact'
+ */
+import type { Article } from '../lib/cms';
+
+interface Props {
+  article: Article;
+  href: string;
+  variant?: 'default' | 'featured' | 'compact';
+  sectionLabel?: string;
+  delay?: number;
+}
+
+const {
+  article,
+  href,
+  variant = 'default',
+  sectionLabel,
+  delay = 0,
+} = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+}).format(new Date(article._createdDate));
+---
+
+<article
+  class={`editorial-card editorial-card--${variant}`}
+  data-reveal
+  data-delay={String(delay)}
+  data-search-title={article.title.toLowerCase()}
+  data-search-author={article.author ? article.author.toLowerCase() : ''}
+  data-category={article.collectionId}
+>
+  <a href={href} class="editorial-card__link" aria-label={`Read: ${article.title}`}>
+
+    {/* Cover image (not rendered for Beyond The Books) */}
+    {article.coverImage && !['Artwork', 'CreativeWriting', 'Photography', 'poetry'].includes(article.collectionId || '') && (
+      <div class="editorial-card__img-wrap">
+        <img
+          src={article.coverImage}
+          alt={article.title}
+          loading="lazy"
+          decoding="async"
+          class="editorial-card__img"
+        />
+      </div>
+    )}
+
+    <div class="editorial-card__body">
+      {sectionLabel && (
+        <p class="eyebrow editorial-card__section">{sectionLabel}</p>
+      )}
+
+      <h3 class="editorial-card__title">{article.title}</h3>
+
+      <div class="editorial-card__meta">
+        {article.author && (
+          <span class="editorial-card__author">{article.author}</span>
+        )}
+        {article.author && <span class="editorial-card__sep" aria-hidden="true">·</span>}
+        <time class="editorial-card__date" datetime={article._createdDate}>
+          {formattedDate}
+        </time>
+      </div>
+    </div>
+
+  </a>
+</article>
+
+<style>
+  .editorial-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition:
+      transform var(--dur-normal) var(--ease-out-expo),
+      box-shadow var(--dur-normal) var(--ease-out-expo),
+      border-color var(--dur-normal);
+  }
+
+  .editorial-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-border-strong);
+  }
+
+  .editorial-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Image */
+  .editorial-card__img-wrap {
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .editorial-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--dur-slower) var(--ease-out-expo);
+  }
+
+  .editorial-card:hover .editorial-card__img {
+    transform: scale(1.05);
+  }
+
+  /* Body */
+  .editorial-card__body {
+    padding: var(--space-5);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .editorial-card__section {
+    margin-bottom: var(--space-1);
+  }
+
+  .editorial-card__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    font-weight: 400;
+    line-height: var(--lh-snug);
+    color: var(--color-text-primary);
+    letter-spacing: var(--ls-tight);
+    flex: 1;
+  }
+
+  .editorial-card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+    margin-top: auto;
+    padding-top: var(--space-3);
+  }
+
+  .editorial-card__author {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+
+  .editorial-card__sep { opacity: 0.5; }
+
+  /* ── Variant: featured ──────────────────────────────────────── */
+  .editorial-card--featured .editorial-card__img-wrap {
+    aspect-ratio: 16 / 9;
+  }
+
+  .editorial-card--featured .editorial-card__title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+  }
+
+  /* ── Variant: compact ───────────────────────────────────────── */
+  .editorial-card--compact {
+    border-radius: var(--radius-sm);
+  }
+
+  .editorial-card--compact .editorial-card__link {
+    flex-direction: row;
+    gap: var(--space-4);
+    align-items: center;
+    padding: var(--space-4);
+  }
+
+  .editorial-card--compact .editorial-card__img-wrap {
+    width: 80px;
+    height: 80px;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  .editorial-card--compact .editorial-card__body {
+    padding: 0;
+  }
+
+  .editorial-card--compact .editorial-card__title {
+    font-size: var(--fs-base);
+  }
+</style>

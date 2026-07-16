@@ -1,0 +1,62 @@
+---
+/**
+ * InstagramWall.astro — Instagram feed via Behold widget
+ * Uses the Behold.so embed widget (no API token required).
+ * Feed ID: dyDOswbye7ZO7FHg57yE
+ */
+---
+
+<section class="ig-wall section-py" aria-label="Instagram feed">
+  <div class="container">
+
+    <div class="ig-wall__header" data-reveal>
+      <p class="eyebrow">Follow along</p>
+      <h2 class="ig-wall__title">@thesuture</h2>
+    </div>
+
+    <!-- Behold Instagram widget -->
+    <div class="ig-wall__widget" data-reveal data-delay="100">
+      <behold-widget feed-id="dyDOswbye7ZO7FHg57yE"></behold-widget>
+    </div>
+
+  </div>
+</section>
+
+<!-- Behold widget script — loaded once, deferred -->
+<script>
+  (() => {
+    if (window.__bhldScript) return;
+    window.__bhldScript = true;
+    const d = document, s = d.createElement('script');
+    s.type = 'module';
+    s.src = 'https://w.behold.so/widget.js';
+    setTimeout(() => { d.head.append(s); }, 0);
+  })();
+</script>
+
+<style>
+  .ig-wall__header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+  }
+
+  .ig-wall__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 400;
+    color: var(--color-text-primary);
+    margin-top: var(--space-2);
+  }
+
+  .ig-wall__widget {
+    width: 100%;
+  }
+
+  /* Override Behold default styles to match The Suture design */
+  .ig-wall__widget behold-widget {
+    --behold-font-family: var(--font-sans);
+    --behold-border-radius: var(--radius-sm);
+    display: block;
+    width: 100%;
+  }
+</style>

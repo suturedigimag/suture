@@ -1,0 +1,108 @@
+---
+/**
+ * Beyond The Books landing — /suture/beyond-the-books
+ */
+import PageLayout from '../../../layouts/PageLayout.astro';
+import EditorialCard from '../../../components/EditorialCard.astro';
+import { getArticles, BOOKS_ROUTE_MAP, COLLECTION_NAMES } from '../../../lib/cms';
+
+const subCollections = Object.entries(BOOKS_ROUTE_MAP);
+
+const SUB_DESCRIPTIONS: Record<string, string> = {
+  'artwork':               'Let’s admire the stunning paintings, sketches and digital art created by our talented students.',
+  'photography':           'View life through the lenses of our student photographers. Check out the stories captured in pictures.',
+  'creative-writing':      'Lose yourself in Original stories, musings and creative essays written by the students.',
+  'poetry':                'read the heartfelt poetry and expressions of our fellow students. Explore their reflections on life, learning and healing.',
+};
+
+const previews = await Promise.all(
+  subCollections.map(async ([slug, collectionId]) => {
+    const articles = await getArticles(collectionId, 3);
+    return { slug, name: COLLECTION_NAMES[slug] ?? slug, articles };
+  })
+);
+---
+
+<PageLayout
+  title="Beyond The Books"
+  description="Creative expression from The Suture — artwork, photography, creative writing, and poetry."
+>
+  <div style="padding-top: 64px;">
+    <div class="section-landing__banner">
+      <div class="container">
+        <p class="eyebrow" data-reveal>The Suture</p>
+        <h1 class="section-landing__title" data-reveal data-delay="100">Beyond The Books</h1>
+        <p class="section-landing__desc" data-reveal data-delay="150" style="margin-top: var(--space-4); color: var(--color-text-secondary); max-width: 600px; font-size: var(--fs-md); line-height: var(--lh-relaxed);">
+          Time to drop the textbooks and explore your creative side. Here is a curated space showcasing the artistic, poetic and photographic talents of the students of PSG IMSR.
+        </p>
+      </div>
+    </div>
+
+    <div class="container section-py">
+      {previews.map(({ slug, name, articles }) => (
+        articles.length > 0 && (
+          <div class="cc-section" data-reveal>
+            <div class="cc-section__header">
+              <h2 class="cc-section__name">
+                <a href={`/suture/beyond-the-books/${slug}`}>{name}</a>
+              </h2>
+              <a href={`/suture/beyond-the-books/${slug}`} class="cc-section__view-all">
+                View All →
+              </a>
+            </div>
+            {SUB_DESCRIPTIONS[slug] && (
+              <p class="cc-section__description">{SUB_DESCRIPTIONS[slug]}</p>
+            )}
+            <hr class="divider" style="margin-block: var(--space-4) var(--space-6);" />
+            <div class="cc-section__grid">
+              {articles.map((article, i) => (
+                <EditorialCard
+                  article={article}
+                  href={`/suture/beyond-the-books/${slug}/${article.slug}`}
+                  sectionLabel={name}
+                  delay={i * 80}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .section-landing__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-12) var(--space-10);
+  }
+  .section-landing__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+  }
+  .cc-section { margin-bottom: var(--space-16); }
+  .cc-section__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  .cc-section__name { font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; }
+  .cc-section__name a { transition: color var(--dur-fast); }
+  .cc-section__name a:hover { color: var(--color-accent); }
+  .cc-section__view-all { font-size: var(--fs-sm); font-weight: 500; color: var(--color-accent); white-space: nowrap; }
+  .cc-section__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-6); }
+
+  .cc-section__description {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    max-width: 600px;
+    margin-top: var(--space-2);
+    margin-bottom: 0;
+  }
+</style>

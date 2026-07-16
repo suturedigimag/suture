@@ -1,0 +1,311 @@
+---
+/**
+ * Write for Us Page — /suture/write-for-us
+ * Detailed submission guidelines and intake form mockup.
+ */
+import PageLayout from '../../layouts/PageLayout.astro';
+---
+
+<PageLayout
+  title="Write for Us"
+  description="Submit your writing, clinical observations, artwork, or poetry to The Suture."
+>
+  <div class="write-page" style="padding-top: 64px;">
+    
+    <!-- Banner -->
+    <div class="write-page__banner">
+      <div class="container">
+        <p class="eyebrow" data-reveal>Contribute</p>
+        <h1 class="write-page__title" data-reveal data-delay="100">Write for The Suture</h1>
+      </div>
+    </div>
+
+    <div class="container--narrow section-py">
+      <div class="write-page__intro" data-reveal>
+        <p class="write-page__lead">
+          The Suture is an independent digital publication built for the Literature Club community. We welcome articles, clinical reviews, poetry, and creative photography from students across all years.
+        </p>
+      </div>
+
+      <!-- Guidelines -->
+      <section class="write-page__guidelines" data-reveal data-delay="150" aria-labelledby="guidelines-heading">
+        <h2 id="guidelines-heading" class="write-page__sub">Submission Guidelines</h2>
+        
+        <div class="write-page__grid">
+          <div class="write-page__rule">
+            <h3>Clinical Case Corner</h3>
+            <p>Reports must include structured case presentations, diagnostic workflow summaries, and educational lessons. Word count limit: 800–1200 words.</p>
+          </div>
+          <div class="write-page__rule">
+            <h3>Beyond The Books</h3>
+            <p>Poetry, prose, and artwork. Please attach high-resolution digital scans or captures. No specific word counts, let the verse speak.</p>
+          </div>
+          <div class="write-page__rule">
+            <h3>Campus Chronicles</h3>
+            <p>Reports and reviews of campus cultural events, sports meets, and student achievements. Action-oriented photography is highly encouraged.</p>
+          </div>
+          <div class="write-page__rule">
+            <h3>World Health &amp; Research</h3>
+            <p>Summaries of public health initiatives, global outbreaks, or original laboratory investigations. Must include key scientific citations.</p>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider" style="margin-block: var(--space-10);" />
+
+      <!-- Form Mockup -->
+      <section class="write-page__form-section" data-reveal data-delay="200" aria-labelledby="form-heading">
+        <h2 id="form-heading" class="write-page__sub">Submit Your Draft</h2>
+        <p class="write-page__form-desc">
+          Fill in the details below to submit your article or creative piece. Our editorial board reviews submissions on a rolling basis. You can also email your drafts directly to <a href="mailto:suturedigimag@psgimsr.ac.in" style="color: var(--color-accent); text-decoration: underline; font-weight: 500;">suturedigimag@psgimsr.ac.in</a>.
+        </p>
+
+        <form class="write-form" id="submission-intake-form">
+          <div class="write-form__row">
+            <div class="write-form__group">
+              <label for="submitter-name">Full Name</label>
+              <input type="text" id="submitter-name" required placeholder="e.g. Devu Vijayan" />
+            </div>
+            <div class="write-form__group">
+              <label for="submitter-email">Email Address</label>
+              <input type="email" id="submitter-email" required placeholder="e.g. litclub@gmail.com" />
+            </div>
+          </div>
+
+          <div class="write-form__group">
+            <label for="submission-section">Target Section</label>
+            <select id="submission-section" required>
+              <option value="">Select a section...</option>
+              <option value="clinical-case-corner">Clinical Case Corner</option>
+              <option value="decrypt-diagnose">Decrypt &amp; Diagnose</option>
+              <option value="department-spotlight">Department Spotlight</option>
+              <option value="healers-wellness">Healers Wellness</option>
+              <option value="research-resource">Research Resource</option>
+              <option value="world-health">World Health</option>
+              <option value="campus-chronicles">Campus Chronicles</option>
+              <option value="beyond-the-books">Beyond The Books</option>
+            </select>
+          </div>
+
+          <div class="write-form__group">
+            <label for="submission-title">Article Title</label>
+            <input type="text" id="submission-title" required placeholder="e.g. A Review of Modern Suture Techniques" />
+          </div>
+
+          <div class="write-form__group">
+            <label for="submission-body">Abstract / Draft Text</label>
+            <textarea id="submission-body" rows="8" required placeholder="Paste your abstract or full draft here..."></textarea>
+          </div>
+
+          <div class="write-form__group">
+            <label for="submission-file" class="write-form__file-label">
+              Attach Draft Document or Media
+            </label>
+            <input type="file" id="submission-file" class="write-form__file-input" />
+            <p style="font-size: var(--fs-xs); color: var(--color-text-tertiary); margin-top: 4px;">Supported formats: PDF, DOCX, JPG, PNG (Max 10MB)</p>
+          </div>
+
+          <button type="submit" class="write-form__btn">Submit Draft</button>
+        </form>
+      </section>
+
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .write-page__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-12) var(--space-10);
+  }
+
+  .write-page__banner .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+
+  .write-page__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+  }
+
+  .write-page__lead {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    line-height: var(--lh-snug);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-10);
+  }
+
+  .write-page__sub {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-6);
+  }
+
+  .write-page__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8);
+  }
+
+  .write-page__rule h3 {
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--color-accent);
+    margin-bottom: var(--space-2);
+  }
+
+  .write-page__rule p {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+
+  .write-page__form-desc {
+    font-size: var(--fs-md);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    margin-bottom: var(--space-8);
+  }
+
+  /* ── Form Styling ───────────────────────────────────────────── */
+  .write-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-8);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .write-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .write-form__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .write-form__group label {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-text-secondary);
+  }
+
+  .write-form__group input[type="text"],
+  .write-form__group input[type="email"],
+  .write-form__group select,
+  .write-form__group textarea {
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+
+  .write-form__group input:focus,
+  .write-form__group select:focus,
+  .write-form__group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-muted);
+  }
+
+  .write-form__file-label {
+    display: block;
+    cursor: pointer;
+  }
+
+  .write-form__file-input {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .write-form__btn {
+    align-self: flex-start;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    background: var(--color-accent);
+    color: #FAFAF8;
+    border: none;
+    padding: var(--space-4) var(--space-10);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--dur-fast);
+  }
+
+  .write-form__btn:hover {
+    background: var(--color-accent-hover);
+  }
+
+  @media (max-width: 768px) {
+    .write-page__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    .write-form__row {
+      grid-template-columns: 1fr;
+    }
+    .write-form {
+      padding: var(--space-5);
+    }
+  }
+</style>
+
+<script>
+  const form = document.getElementById('submission-intake-form');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Retrieve input values
+    const nameInput = document.getElementById('submitter-name') as HTMLInputElement | null;
+    const emailInput = document.getElementById('submitter-email') as HTMLInputElement | null;
+    const titleInput = document.getElementById('submission-title') as HTMLInputElement | null;
+    const categorySelect = document.getElementById('submission-section') as HTMLSelectElement | null;
+    const summaryTextarea = document.getElementById('submission-body') as HTMLTextAreaElement | null;
+    
+    const name = nameInput?.value || '';
+    const email = emailInput?.value || '';
+    const title = titleInput?.value || '';
+    const category = categorySelect?.value || '';
+    const summary = summaryTextarea?.value || '';
+    
+    // Construct email subject and body
+    const subject = encodeURIComponent(`The Suture: Submission Draft - ${title}`);
+    const body = encodeURIComponent(
+      `Dear Editors of The Suture,\n\n` +
+      `I would like to submit a new draft for publication. Please find the details below:\n\n` +
+      `-----------------------------------------\n` +
+      `Author Name: ${name}\n` +
+      `Author Email: ${email}\n` +
+      `Proposed Section/Category: ${category}\n` +
+      `Article/Draft Title: ${title}\n\n` +
+      `Abstract / Summary:\n` +
+      `${summary}\n` +
+      `-----------------------------------------\n\n` +
+      `Note to Author: Please attach your draft document (PDF, DOCX, JPG, PNG) to this email before hitting send.`
+    );
+    
+    // Trigger mailto protocol
+    window.location.href = `mailto:suturedigimag@psgimsr.ac.in?subject=${subject}&body=${body}`;
+  });
+</script>

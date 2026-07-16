@@ -1,0 +1,71 @@
+---
+/**
+ * /suture/admin/collection-ids — Helper page
+ *
+ * Instructions for finding your Wix CMS collection IDs.
+ * Delete this page once you've filled in the IDs in src/lib/cms.ts.
+ */
+import Base from '../../../layouts/Base.astro';
+
+const collections = [
+  { name: 'Clinical Case Corner', key: 'clinicalCaseCorner' },
+  { name: 'Decrypt & Diagnose', key: 'decryptAndDiagnose' },
+  { name: 'Department Spotlight', key: 'departmentSpotlight' },
+  { name: 'Healers Wellness', key: 'healersWellness' },
+  { name: 'Research Resource', key: 'researchResource' },
+  { name: 'World Health', key: 'worldHealth' },
+  { name: 'Campus Chronicles – Clubs', key: 'clubs' },
+  { name: 'Campus Chronicles – Cultural', key: 'cultural' },
+  { name: 'Campus Chronicles – NCC', key: 'ncc' },
+  { name: 'Campus Chronicles – Sports', key: 'sports' },
+  { name: 'Campus Chronicles – Student Achievements', key: 'studentAchievements' },
+  { name: 'Campus Chronicles – YRC', key: 'yrc' },
+  { name: 'Beyond The Books – Artwork', key: 'artwork' },
+  { name: 'Beyond The Books – Creative Writing', key: 'creativeWriting' },
+  { name: 'Beyond The Books – Photography', key: 'photography' },
+  { name: 'Beyond The Books – Poetry', key: 'poetry' },
+  { name: 'About Us', key: 'aboutUs' },
+];
+---
+
+<Base title="Collection ID Helper — The Suture">
+  <div style="padding: 64px 32px; max-width: 800px; margin: 0 auto; font-family: var(--font-sans);">
+    <h1 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1rem;">
+      Find Your Wix CMS Collection IDs
+    </h1>
+    <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin-bottom: 2rem;">
+      <strong>How to find collection IDs:</strong>
+      <ol style="margin-top: 8px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem;">
+        <li>Go to <strong>manage.wix.com</strong> → Your Site → <strong>Content Manager</strong></li>
+        <li>Click on a collection name</li>
+        <li>Click the <strong>Settings</strong> (gear) icon → copy the <strong>Collection ID</strong></li>
+        <li>Paste it into the corresponding key in <code>src/lib/cms.ts</code> → <code>COLLECTION_IDS</code></li>
+      </ol>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--color-border);">
+          <th style="text-align: left; padding: 8px 12px; color: var(--color-text-tertiary);">Collection Name (in Wix)</th>
+          <th style="text-align: left; padding: 8px 12px; color: var(--color-text-tertiary);">Key in cms.ts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {collections.map((c) => (
+          <tr style="border-bottom: 1px solid var(--color-border);">
+            <td style="padding: 10px 12px;">{c.name}</td>
+            <td style="padding: 10px 12px;">
+              <code style="background: var(--color-surface-hover); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;">
+                COLLECTION_IDS.{c.key}
+              </code>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <p style="margin-top: 2rem; font-size: 0.85rem; color: var(--color-text-tertiary);">
+      Delete <code>src/pages/admin/</code> once all IDs are filled in.
+    </p>
+  </div>
+</Base>

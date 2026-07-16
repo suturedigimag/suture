@@ -1,0 +1,1178 @@
+---
+/**
+ * Literature Club — Main Homepage (Root Index)
+ * Route: /suture/ (or root under base path /suture)
+ *
+ * This is the parent site. The Suture lives at /suture/suture.
+ */
+import '../styles/global.css';
+
+const title = 'PSG Lit Club | Coimbatore';
+const description = "It's PSGIMSR's very own Literature and Arts club!";
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, id: wixDesktopViewport" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href="https://saviosajujoseph55.wixsite.com/psglitclub" />
+
+  <!-- OG -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:site_name" content="Lit Club" />
+  <meta property="og:image" content="https://static.wixstatic.com/media/f8a2e1_a68b38fbb183414baff39f72ad7fac1e~mv2.jpg/v1/fill/w_1280,h_1280,al_c/f8a2e1_a68b38fbb183414baff39f72ad7fac1e~mv2.jpg" />
+  <meta property="og:image:width" content="1280" />
+  <meta property="og:image:height" content="1280" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content="https://static.wixstatic.com/media/f8a2e1_a68b38fbb183414baff39f72ad7fac1e~mv2.jpg/v1/fill/w_1280,h_1280,al_c/f8a2e1_a68b38fbb183414baff39f72ad7fac1e~mv2.jpg" />
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+</head>
+
+<body class="litclub-home">
+
+  <!-- ── Navigation ───────────────────────────────────────────── -->
+  <header class="lc-nav" id="lc-nav">
+    <nav class="lc-nav__inner" aria-label="Main navigation">
+      <a href="/" class="lc-nav__logo" aria-label="Literature Club — Home">
+        <img src="/images/litclub_logo.jpg" alt="Lit Club" class="lc-nav__logo-img" />
+        <span class="lc-nav__logo-text">Lit Club</span>
+      </a>
+      <ul class="lc-nav__links" role="list">
+        <li><a href="/suture" class="lc-nav__link">The Suture</a></li>
+        <li><a href="#about" class="lc-nav__link">About</a></li>
+        <li><a href="#events" class="lc-nav__link">Events</a></li>
+        <li><a href="#visit" class="lc-nav__link">Visit</a></li>
+      </ul>
+      <div class="lc-nav__actions-wrap">
+        <a href="/suture" class="lc-nav__cta">Read The Suture</a>
+        <button class="lc-nav__hamburger" id="lc-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ── Hero ─────────────────────────────────────────────────── -->
+    <section class="lc-hero" aria-label="Welcome to Literature Club">
+      <div class="lc-hero__bg" id="lc-hero-bg" aria-hidden="true">
+        <div class="lc-hero__gradient"></div>
+      </div>
+      <div class="lc-hero__content container">
+        <p class="lc-hero__overline eyebrow" data-hero-reveal="eyebrow">Student Literary Society</p>
+        <h1 class="lc-hero__title" data-hero-reveal="title">
+          Where words<br />find a home.
+        </h1>
+        <p class="lc-hero__sub" data-hero-reveal="sub">
+          It's PSGIMSR's very own Literature and Arts club! Nurturing writers, readers, and thinkers across medicine and beyond.
+        </p>
+
+        <!-- Testimonial Quote in Hero -->
+        <div class="lc-hero__testimonial" data-hero-reveal="quote">
+          <blockquote class="lc-hero__blockquote">
+            "This is a wonderful initiative to bring the faculties and students together to exchange thoughts, ideas and talent. It's a refreshing glass of lemonade at the end of a hot day!"
+          </blockquote>
+          <cite class="lc-hero__author">— Dr. Subba Rao, Principal</cite>
+        </div>
+
+        <div class="lc-hero__actions" data-hero-reveal="cta">
+          <a href="/suture" class="lc-hero__btn lc-hero__btn--primary">
+            Read The Suture
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#about" class="lc-hero__btn lc-hero__btn--ghost">
+            About Us
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Publication spotlight ─────────────────────────────────── -->
+    <section class="lc-pub section-py" id="publication">
+      <div class="container">
+        <div class="lc-pub__inner" data-reveal>
+          <div class="lc-pub__badge">
+            <span class="lc-pub__badge-dot" aria-hidden="true"></span>
+            Our Publication
+          </div>
+          <div class="lc-pub__card">
+            <div class="lc-pub__text">
+              <p class="eyebrow">The Suture</p>
+              <h2 class="lc-pub__title">An independent editorial publication</h2>
+              <p class="lc-pub__desc">
+                The Suture covers medicine, campus life, wellness, research, and creative expression.
+                Written entirely by students, for students.
+              </p>
+              <ul class="lc-pub__sections">
+                <li>Clinical Case Corner</li>
+                <li>Campus Chronicles</li>
+                <li>Beyond The Books</li>
+                <li>World Health</li>
+                <li>Healers Wellness</li>
+                <li>Research Resource</li>
+              </ul>
+              <a href="/suture" class="lc-pub__link">
+                Visit The Suture
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+            <div class="lc-pub__visual">
+              <div class="lc-carousel" id="lc-carousel">
+                <div class="lc-carousel__slides">
+                  <div class="lc-carousel__slide active">
+                    <img src="/images/about_magic.jpg" alt="Literature" class="lc-carousel__img" />
+                    <div class="lc-carousel__caption">
+                      <h4 class="lc-carousel__caption-title">Literature & Poetry</h4>
+                      <p class="lc-carousel__caption-text">Student essays, prose, and heartfelt poetry.</p>
+                    </div>
+                  </div>
+                  <div class="lc-carousel__slide">
+                    <img src="/images/axon_conference.jpg" alt="Conference" class="lc-carousel__img" />
+                    <div class="lc-carousel__caption">
+                      <h4 class="lc-carousel__caption-title">Clubs & Symposia</h4>
+                      <p class="lc-carousel__caption-text">AXON '26 panel discussions and active debate clubs.</p>
+                    </div>
+                  </div>
+                  <div class="lc-carousel__slide">
+                    <img src="/images/sports_football.jpg" alt="Sports" class="lc-carousel__img" />
+                    <div class="lc-carousel__caption">
+                      <h4 class="lc-carousel__caption-title">Sports & Leagues</h4>
+                      <p class="lc-carousel__caption-text">PSG athletic meets and clinical tournaments.</p>
+                    </div>
+                  </div>
+                  <div class="lc-carousel__slide">
+                    <img src="/images/cultural_dance.jpg" alt="Cultural" class="lc-carousel__img" />
+                    <div class="lc-carousel__caption">
+                      <h4 class="lc-carousel__caption-title">Arts & Culture</h4>
+                      <p class="lc-carousel__caption-text">Student art showcases and annual dance programs.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="lc-carousel__nav">
+                  <button class="lc-carousel__nav-btn prev" aria-label="Previous Slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <button class="lc-carousel__nav-btn next" aria-label="Next Slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── About ──────────────────────────────────────────────────── -->
+    <section class="lc-about section-py" id="about" aria-labelledby="about-heading">
+      <div class="container">
+        <div class="lc-about__inner">
+          <div class="lc-about__text" data-reveal>
+            <p class="eyebrow">About</p>
+            <h2 class="lc-about__title" id="about-heading">
+              We have so much to offer!
+            </h2>
+            <p class="lc-about__body">
+              Right from hotshot topics to debates to good music and karaoke for us to indulge in, to delving into the world of colors and art, all the way to some feet-shuffling to quick beats with our dance numbers, to simply intricate, profound yet witty written pieces... we have it all and more.
+            </p>
+            <div class="lc-about__social">
+              <a href="https://instagram.com/litclubpsgimsr?igshid=YmMyMTA2M2Y=" target="_blank" rel="noopener noreferrer" class="lc-about__instagram-link" aria-label="Follow us on Instagram">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="instagram-icon"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                <span>Follow @litclubpsgimsr</span>
+              </a>
+            </div>
+          </div>
+          <div class="lc-about__stats" data-reveal data-delay="200">
+            <div class="lc-about__stat">
+              <span class="lc-about__stat-num">4</span>
+              <span class="lc-about__stat-label">Editorial Sections</span>
+            </div>
+            <div class="lc-about__stat">
+              <span class="lc-about__stat-num">16</span>
+              <span class="lc-about__stat-label">Sub-Collections</span>
+            </div>
+            <div class="lc-about__stat">
+              <span class="lc-about__stat-num">100%</span>
+              <span class="lc-about__stat-label">Student Written</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Events ─────────────────────────────────────────────────── -->
+    <section class="lc-events section-py" id="events" aria-labelledby="events-heading">
+      <div class="container">
+        <div class="lc-events__header" data-reveal>
+          <p class="eyebrow">Upcoming</p>
+          <h2 class="lc-events__title" id="events-heading">Events</h2>
+        </div>
+        
+        <div class="lc-events__grid">
+          <!-- Event 1 -->
+          <div class="lc-event-card" data-reveal data-delay="100">
+            <div class="lc-event-card__date">
+              <span class="lc-event-card__day">18</span>
+              <span class="lc-event-card__month">Sep</span>
+            </div>
+            <div class="lc-event-card__content">
+              <span class="lc-event-card__badge">Symposium</span>
+              <h3 class="lc-event-card__title">Annual Poetry Slam</h3>
+              <p class="lc-event-card__desc">A college-wide poetry slam where words bleed. Bring your original verses and perform in front of a live audience.</p>
+              <div class="lc-event-card__meta">
+                <span>🕒 5:00 PM</span> · <span>📍 Main Auditorium</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Event 2 -->
+          <div class="lc-event-card" data-reveal data-delay="200">
+            <div class="lc-event-card__date">
+              <span class="lc-event-card__day">05</span>
+              <span class="lc-event-card__month">Oct</span>
+            </div>
+            <div class="lc-event-card__content">
+              <span class="lc-event-card__badge">Workshop</span>
+              <h3 class="lc-event-card__title">The Pulse of Prose</h3>
+              <p class="lc-event-card__desc">A masterclass in medical humanities and creative journaling. Explore how narrative shapes clinical empathy.</p>
+              <div class="lc-event-card__meta">
+                <span>🕒 3:30 PM</span> · <span>📍 Seminar Hall B</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Event 3 -->
+          <div class="lc-event-card" data-reveal data-delay="300">
+            <div class="lc-event-card__date">
+              <span class="lc-event-card__day">24</span>
+              <span class="lc-event-card__month">Oct</span>
+            </div>
+            <div class="lc-event-card__content">
+              <span class="lc-event-card__badge">Panel</span>
+              <h3 class="lc-event-card__title">Narrative Medicine</h3>
+              <p class="lc-event-card__desc">Exploring the intersection of storytelling and patient care with guest speakers from clinical and literary fields.</p>
+              <div class="lc-event-card__meta">
+                <span>🕒 4:00 PM</span> · <span>📍 Academic Block</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- ── Instagram Wall ───────────────────────────────────────── -->
+    <section class="lc-instagram section-py" id="instagram" aria-labelledby="instagram-heading">
+      <div class="container text-center">
+        <div class="lc-instagram__inner" data-reveal>
+          <p class="eyebrow" style="margin-bottom: var(--space-4);">Instagram Feed</p>
+          <h2 class="lc-instagram__title" id="instagram-heading" style="margin-bottom: var(--space-10); font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; color: var(--color-text-primary);">Follow Us On Instagram</h2>
+          <div class="lc-instagram__widget-wrap" style="max-width: 1200px; margin: 0 auto; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface-hover); padding: var(--space-4); border: 1px solid var(--color-border);">
+            <behold-widget feed-id="dyDOswbye7ZO7FHg57yE"></behold-widget>
+            <script>
+              (() => {
+                if(window.__bhldScript)return;window.__bhldScript=true;
+                const d=document,s=d.createElement("script");s.type="module";
+                s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+              })();
+            </script>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Visit Us ─────────────────────────────────────────────── -->
+    <section class="lc-visit section-py" id="visit" aria-labelledby="visit-heading">
+      <div class="container text-center">
+        <div class="lc-visit__inner" data-reveal>
+          <p class="eyebrow">Visit Us</p>
+          <h2 class="lc-visit__title" id="visit-heading">PSG LIT CLUB</h2>
+          <div class="lc-visit__logo-wrap">
+            <img src="/images/litclub_logo.jpg" alt="PSG Lit Club Logo" class="lc-visit__logo" />
+          </div>
+          <p class="lc-visit__sub">Coimbatore, Tamil Nadu</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ───────────────────────────────────────────────────── -->
+    <section class="lc-cta" aria-label="Join Literature Club">
+      <div class="container">
+        <div class="lc-cta__inner" data-reveal>
+          <h2 class="lc-cta__title">Ready to write for The Suture?</h2>
+          <p class="lc-cta__sub">All students of Literature Club are welcome to contribute.</p>
+          <a href="/suture/write-for-us" class="lc-cta__btn">Submit an Article</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer class="lc-footer" role="contentinfo">
+    <div class="container">
+      <div class="lc-footer__inner">
+        <div class="lc-footer__brand">
+          <a href="/" class="lc-footer__logo">Literature Club</a>
+          <p class="lc-footer__tagline">Student Literary Society</p>
+        </div>
+        <nav class="lc-footer__nav" aria-label="Footer links">
+          <a href="/suture" class="lc-footer__link">The Suture</a>
+          <a href="#about" class="lc-footer__link">About</a>
+          <a href="#events" class="lc-footer__link">Events</a>
+          <a href="#team" class="lc-footer__link">Team</a>
+          <a href="#visit" class="lc-footer__link">Visit</a>
+        </nav>
+      </div>
+      <p class="lc-footer__copy">&copy;2022 by | PSGIMSR | All rights Reserved</p>
+    </div>
+  </footer>
+
+</body>
+</html>
+
+<!-- Nav scroll effect -->
+<script>
+  import { animate, stagger } from 'animejs';
+
+  // 1. Navigation scroll effect
+  const nav = document.getElementById('lc-nav');
+  window.addEventListener('scroll', () => {
+    nav?.classList.toggle('lc-nav--scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  // Mobile hamburger toggle for Literature Club nav
+  const hamburger = document.getElementById('lc-nav-hamburger');
+  const navLinks = document.querySelector('.lc-nav__links');
+  
+  hamburger?.addEventListener('click', () => {
+    const isOpen = hamburger.getAttribute('aria-expanded') === 'true';
+    hamburger.setAttribute('aria-expanded', String(!isOpen));
+    navLinks?.classList.toggle('lc-nav__links--open', !isOpen);
+    hamburger.classList.toggle('lc-nav__hamburger--open', !isOpen);
+  });
+
+  navLinks?.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger?.setAttribute('aria-expanded', 'false');
+      navLinks.classList.remove('lc-nav__links--open');
+      hamburger?.classList.remove('lc-nav__hamburger--open');
+    });
+  });
+
+  // 2. Hero initial reveal with anime.js (staggered)
+  animate('[data-hero-reveal]', {
+    translateY: [48, 0],
+    opacity: [0, 1],
+    delay: stagger(150, { start: 200 }),
+    duration: 1200,
+    ease: 'easeOutExpo'
+  });
+
+  // 3. Scroll reveal with anime.js (IntersectionObserver based)
+  const scrollElements = document.querySelectorAll('[data-reveal]');
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const target = entry.target as HTMLElement;
+        const delayAttr = target.getAttribute('data-delay');
+        const delay = delayAttr ? parseInt(delayAttr, 10) : 0;
+
+        animate(target, {
+          translateY: [32, 0],
+          opacity: [0, 1],
+          duration: 1000,
+          delay: delay,
+          ease: 'easeOutExpo'
+        });
+        scrollObserver.unobserve(target);
+      }
+    });
+  }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' });
+
+  scrollElements.forEach((el) => {
+    (el as HTMLElement).style.opacity = '0';
+    scrollObserver.observe(el);
+  });
+
+  // 4. Interactive Carousel with anime.js
+  const carousel = document.getElementById('lc-carousel');
+  if (carousel) {
+    const slides = carousel.querySelectorAll('.lc-carousel__slide');
+    const prevBtn = carousel.querySelector('.lc-carousel__nav-btn.prev');
+    const nextBtn = carousel.querySelector('.lc-carousel__nav-btn.next');
+    let activeIndex = 0;
+    let isAnimating = false;
+
+    const showSlide = (nextIndex: number, direction: 'next' | 'prev') => {
+      if (isAnimating || nextIndex === activeIndex) return;
+      isAnimating = true;
+
+      const currentSlide = slides[activeIndex];
+      const nextSlide = slides[nextIndex];
+
+      nextSlide.classList.add('active');
+      const offset = direction === 'next' ? 120 : -120;
+      
+      // Animate current slide OUT
+      animate(currentSlide, {
+        opacity: [1, 0],
+        translateX: [0, -offset],
+        duration: 500,
+        ease: 'easeInOutQuad',
+        complete: () => {
+          currentSlide.classList.remove('active');
+          (currentSlide as HTMLElement).style.transform = '';
+        }
+      });
+
+      // Animate next slide IN
+      animate(nextSlide, {
+        opacity: [0, 1],
+        translateX: [offset, 0],
+        duration: 500,
+        ease: 'easeInOutQuad',
+        complete: () => {
+          activeIndex = nextIndex;
+          isAnimating = false;
+        }
+      });
+    };
+
+    prevBtn?.addEventListener('click', () => {
+      const nextIndex = (activeIndex - 1 + slides.length) % slides.length;
+      showSlide(nextIndex, 'prev');
+    });
+
+    nextBtn?.addEventListener('click', () => {
+      const nextIndex = (activeIndex + 1) % slides.length;
+      showSlide(nextIndex, 'next');
+    });
+
+    // Auto play every 6 seconds
+    setInterval(() => {
+      if (!isAnimating) {
+        const nextIndex = (activeIndex + 1) % slides.length;
+        showSlide(nextIndex, 'next');
+      }
+    }, 6000);
+  }
+</script>
+
+<style>
+  /* ── Base ────────────────────────────────────────────────────── */
+  .litclub-home {
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+  }
+
+  /* ── Nav ─────────────────────────────────────────────────────── */
+  .lc-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 900;
+    transition: background var(--dur-normal), box-shadow var(--dur-normal), border-color var(--dur-normal);
+    border-bottom: 1px solid transparent;
+  }
+  .lc-nav--scrolled {
+    background: rgba(250,250,248,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom-color: var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+  .lc-nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    height: 80px;
+    gap: var(--space-8);
+  }
+  .lc-nav__logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+    transition: color var(--dur-fast);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .lc-nav__logo-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .lc-nav__logo-text {
+    font-family: var(--font-serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+  .lc-nav__logo:hover { color: var(--color-accent); }
+  .lc-nav__links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 1;
+    justify-content: center;
+  }
+  .lc-nav__link {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    transition: color var(--dur-fast), background var(--dur-fast);
+  }
+  .lc-nav__link:hover { color: var(--color-text-primary); background: var(--color-surface-hover); }
+  .lc-nav__cta {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    border: 1.5px solid var(--color-text-primary);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background var(--dur-fast), color var(--dur-fast);
+  }
+  .lc-nav__cta:hover { background: var(--color-text-primary); color: var(--color-bg); }
+
+  /* ── Hero ────────────────────────────────────────────────────── */
+  .lc-hero {
+    position: relative;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding-top: 64px;
+    overflow: hidden;
+  }
+  .lc-hero__bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1a1a18 0%, #2d2b27 40%, #1a1814 100%);
+  }
+  .lc-hero__gradient {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(193,18,31,0.08) 0%, transparent 60%);
+  }
+  .lc-hero__content {
+    position: relative;
+    z-index: 2;
+    padding-block: var(--space-20);
+  }
+  .lc-hero__overline { color: var(--color-accent); margin-bottom: var(--space-5); }
+  .lc-hero__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-4xl);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #FAFAF8;
+    margin-bottom: var(--space-6);
+    max-width: 700px;
+  }
+  .lc-hero__sub {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-relaxed);
+    color: rgba(250,250,248,0.6);
+    max-width: 520px;
+    margin-bottom: var(--space-10);
+  }
+  .lc-hero__actions { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  .lc-hero__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-sm);
+    transition: all var(--dur-fast);
+    white-space: nowrap;
+  }
+  .lc-hero__btn--primary { background: var(--color-accent); color: #FAFAF8; }
+  .lc-hero__btn--primary:hover { background: var(--color-accent-hover); gap: var(--space-3); }
+  .lc-hero__btn--ghost { border: 1.5px solid rgba(250,250,248,0.4); color: rgba(250,250,248,0.8); }
+  .lc-hero__btn--ghost:hover { border-color: rgba(250,250,248,0.8); color: #FAFAF8; }
+
+  /* Hero reveal animations */
+  .lc-reveal-init {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity var(--dur-slower) var(--ease-out-expo), transform var(--dur-slower) var(--ease-out-expo);
+  }
+  .lc-reveal-in { opacity: 1; transform: none; }
+
+  /* ── Publication spotlight ───────────────────────────────────── */
+  .lc-pub { background: var(--color-surface); border-top: 1px solid var(--color-border); }
+  .lc-pub__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-widest);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-8);
+  }
+  .lc-pub__badge-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    display: block;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+  .lc-pub__card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: center;
+  }
+  .lc-pub__text { display: flex; flex-direction: column; gap: var(--space-5); }
+  .lc-pub__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+  }
+  .lc-pub__desc { font-size: var(--fs-md); color: var(--color-text-secondary); line-height: var(--lh-relaxed); }
+  .lc-pub__sections {
+    display: flex; flex-wrap: wrap; gap: var(--space-2);
+    list-style: none; padding: 0;
+  }
+  .lc-pub__sections li {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+    background: var(--color-accent-muted);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+  }
+  .lc-pub__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-weight: 500;
+    color: var(--color-accent);
+    transition: gap var(--dur-fast);
+    align-self: flex-start;
+  }
+  .lc-pub__link:hover { gap: var(--space-3); }
+
+  /* Testimonial Quote in Hero */
+  .lc-hero__testimonial {
+    margin-block: var(--space-8);
+    border-left: 2.5px solid var(--color-accent);
+    padding-left: var(--space-4);
+    max-width: 600px;
+    text-align: left;
+  }
+  .lc-hero__blockquote {
+    font-family: var(--font-serif);
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+    color: rgba(250,250,248,0.85);
+    margin-bottom: var(--space-2);
+    font-style: italic;
+    margin-top: 0;
+  }
+  .lc-hero__author {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+
+  /* Interactive Carousel */
+  .lc-pub__visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .lc-carousel {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    height: 360px;
+    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+  }
+
+  .lc-carousel__slides {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .lc-carousel__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    display: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .lc-carousel__slide.active {
+    opacity: 1;
+    display: block;
+    z-index: 2;
+  }
+
+  .lc-carousel__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lc-carousel__caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-6) var(--space-5) var(--space-5);
+    background: linear-gradient(to top, rgba(10,10,8,0.95) 0%, rgba(10,10,8,0.4) 60%, transparent 100%);
+    color: #FAFAF8;
+    z-index: 3;
+    text-align: left;
+  }
+
+  .lc-carousel__caption-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    margin-bottom: var(--space-1);
+    color: #FAFAF8;
+    margin-top: 0;
+  }
+
+  .lc-carousel__caption-text {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    color: rgba(250,250,248,0.7);
+    margin: 0;
+    line-height: var(--lh-relaxed);
+  }
+
+  .lc-carousel__nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: var(--space-3);
+    right: var(--space-3);
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .lc-carousel__nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(250, 250, 248, 0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    pointer-events: auto;
+    transition: background var(--dur-fast), transform var(--dur-fast), color var(--dur-fast);
+  }
+
+  .lc-carousel__nav-btn:hover {
+    background: var(--color-accent);
+    color: #FAFAF8;
+    transform: scale(1.05);
+  }
+
+  /* About Social Link */
+  .lc-about__social {
+    margin-top: var(--space-4);
+  }
+
+  .lc-about__instagram-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-accent);
+    background: var(--color-accent-muted);
+    padding: var(--space-2.5) var(--space-5);
+    border-radius: var(--radius-sm);
+    transition: background var(--dur-fast), color var(--dur-fast);
+  }
+
+  .lc-about__instagram-link:hover {
+    background: var(--color-accent);
+    color: #FAFAF8;
+  }
+
+  .instagram-icon {
+    flex-shrink: 0;
+  }
+
+  /* ── About ───────────────────────────────────────────────────── */
+  .lc-about {
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+  }
+  .lc-about__inner { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-16); align-items: center; }
+  .lc-about__text { display: flex; flex-direction: column; gap: var(--space-5); }
+  .lc-about__title { font-family: var(--font-serif); font-size: var(--fs-3xl); font-weight: 700; letter-spacing: var(--ls-tight); line-height: var(--lh-tight); }
+  .lc-about__body { font-size: var(--fs-md); color: var(--color-text-secondary); line-height: var(--lh-relaxed); }
+  .lc-about__stats { display: flex; flex-direction: column; gap: var(--space-8); }
+  .lc-about__stat { display: flex; flex-direction: column; gap: var(--space-1); padding-bottom: var(--space-8); border-bottom: 1px solid var(--color-border); }
+  .lc-about__stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .lc-about__stat-num { font-family: var(--font-serif); font-size: var(--fs-3xl); font-weight: 700; color: var(--color-accent); line-height: 1; }
+  .lc-about__stat-label { font-size: var(--fs-sm); color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: var(--ls-wider); }
+
+  /* ── Events / Team placeholders ──────────────────────────────── */
+  /* ── Events Section ─────────────────────────────────────────── */
+  .lc-events { border-top: 1px solid var(--color-border); }
+  .lc-events__header { margin-bottom: var(--space-8); }
+  .lc-events__title { font-family: var(--font-serif); font-size: var(--fs-2xl); font-weight: 700; margin-top: var(--space-2); }
+  .lc-events__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+  .lc-event-card {
+    display: flex;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform var(--dur-normal) var(--ease-out-expo), box-shadow var(--dur-normal);
+  }
+  .lc-event-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .lc-event-card__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    background: var(--color-accent-muted);
+    border-right: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .lc-event-card__day {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--color-accent);
+    line-height: 1;
+  }
+  .lc-event-card__month {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-top: 2px;
+  }
+  .lc-event-card__content {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .lc-event-card__badge {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+  }
+  .lc-event-card__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .lc-event-card__desc {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+  .lc-event-card__meta {
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+    margin-top: auto;
+  }
+
+  /* ── Team Section ───────────────────────────────────────────── */
+  .lc-team { border-top: 1px solid var(--color-border); }
+  .lc-team__header { margin-bottom: var(--space-8); }
+  .lc-team__title { font-family: var(--font-serif); font-size: var(--fs-2xl); font-weight: 700; margin-top: var(--space-2); }
+  .lc-team__sub { color: var(--color-text-tertiary); margin-top: var(--space-2); }
+  .lc-team__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+  }
+  .lc-member-card {
+    background: var(--surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: transform var(--dur-normal) var(--ease-out-expo), box-shadow var(--dur-normal);
+  }
+  .lc-member-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .lc-member-card__photo-wrap {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--color-surface-hover);
+  }
+  .lc-member-card__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--dur-slower) var(--ease-out-expo);
+  }
+  .lc-member-card:hover .lc-member-card__photo {
+    transform: scale(1.04);
+  }
+  .lc-member-card__content {
+    padding: var(--space-5);
+  }
+  .lc-member-card__name {
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+  .lc-member-card__role {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+    margin-top: 2px;
+  }
+  .lc-member-card__bio {
+    font-size: var(--fs-xs);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    margin-top: var(--space-3);
+  }
+
+  /* Responsive refinements */
+  @media (max-width: 1024px) {
+    .lc-events__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .lc-team__grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 640px) {
+    .lc-events__grid, .lc-team__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── Visit Us Section ───────────────────────────────────────── */
+  .lc-visit {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .lc-visit__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-6);
+  }
+
+  .lc-visit__logo-wrap {
+    width: 240px;
+    height: 240px;
+    margin-inline: auto;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+  }
+
+  .lc-visit__logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .lc-visit__sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    color: var(--color-text-secondary);
+  }
+
+  /* ── CTA ─────────────────────────────────────────────────────── */
+  .lc-cta {
+    background: var(--color-text-primary);
+    padding-block: clamp(4rem, 8vw, 7rem);
+    border-top: 1px solid var(--color-border);
+  }
+  .lc-cta__inner { text-align: center; }
+  .lc-cta__title { font-family: var(--font-serif); font-size: var(--fs-3xl); font-weight: 700; color: #FAFAF8; margin-bottom: var(--space-4); letter-spacing: var(--ls-tight); }
+  .lc-cta__sub { font-size: var(--fs-md); color: rgba(250,250,248,0.6); margin-bottom: var(--space-8); }
+  .lc-cta__btn {
+    display: inline-flex;
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: #FAFAF8;
+    padding: var(--space-4) var(--space-10);
+    border-radius: var(--radius-sm);
+    transition: background var(--dur-fast);
+  }
+  .lc-cta__btn:hover { background: #FFFFFF; }
+
+  /* ── Footer ──────────────────────────────────────────────────── */
+  .lc-footer {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding-block: var(--space-10);
+  }
+  .lc-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin-bottom: var(--space-6); }
+  .lc-footer__logo { font-family: var(--font-serif); font-weight: 700; font-size: 1.1rem; color: var(--color-text-primary); transition: color var(--dur-fast); }
+  .lc-footer__logo:hover { color: var(--color-accent); }
+  .lc-footer__tagline { font-size: var(--fs-xs); color: var(--color-text-tertiary); margin-top: 4px; }
+  .lc-footer__nav { display: flex; gap: var(--space-6); }
+  .lc-footer__link { font-size: var(--fs-sm); color: var(--color-text-secondary); transition: color var(--dur-fast); }
+  .lc-footer__link:hover { color: var(--color-text-primary); }
+  .lc-footer__copy { font-size: var(--fs-xs); color: var(--color-text-tertiary); }
+
+  /* Hamburger button styling */
+  .lc-nav__hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20px;
+    height: 14px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1000;
+  }
+  .lc-nav__hamburger span {
+    width: 100%;
+    height: 2px;
+    background-color: var(--color-text-primary);
+    transition: transform var(--dur-normal), opacity var(--dur-normal);
+  }
+  .lc-nav__hamburger--open span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+  .lc-nav__hamburger--open span:nth-child(2) {
+    opacity: 0;
+  }
+  .lc-nav__hamburger--open span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+  .lc-nav__actions-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  /* ── Scroll reveal ───────────────────────────────────────────── */
+  [data-reveal] { transition: opacity var(--dur-slower) var(--ease-out-expo), transform var(--dur-slower) var(--ease-out-expo); }
+
+  /* ── Responsive ──────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .lc-pub__card, .lc-about__inner { grid-template-columns: 1fr; }
+    .lc-pub__visual { display: flex; width: 100%; max-width: 480px; margin-inline: auto; margin-top: var(--space-6); }
+    .lc-about__stats { flex-direction: row; }
+  }
+  @media (max-width: 768px) {
+    .lc-hero__title { font-size: var(--fs-3xl); }
+    .lc-footer__inner { flex-direction: column; align-items: flex-start; }
+    .lc-about__stats { flex-direction: column; }
+    
+    .lc-nav__hamburger {
+      display: flex;
+    }
+    .lc-nav__links {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 80px;
+      left: 0;
+      right: 0;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-6) var(--gutter);
+      gap: var(--space-4);
+      transform: translateY(-120%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform var(--dur-normal) var(--ease-out-expo), opacity var(--dur-normal) var(--ease-out-expo);
+      z-index: 999;
+      box-shadow: var(--shadow-md);
+      align-items: flex-start;
+    }
+    .lc-nav__links--open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .lc-nav__link {
+      width: 100%;
+      font-size: var(--fs-md);
+      padding-block: var(--space-2);
+    }
+    .lc-nav__cta {
+      display: none; /* Hide standard CTA inside header, user can click "The Suture" link */
+    }
+  }
+</style>

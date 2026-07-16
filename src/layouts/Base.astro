@@ -1,0 +1,80 @@
+---
+/**
+ * Base.astro — HTML shell for The Suture
+ * Loads global CSS, Google Fonts, and provides base SEO meta tags.
+ */
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonical?: string;
+}
+
+const {
+  title = 'The Suture',
+  description = 'The independent editorial publication of Literature Club — featuring medicine, campus life, and creative expression.',
+  ogImage = '/suture/og-default.jpg',
+  canonical,
+} = Astro.props;
+
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+const fullTitle = title === 'The Suture' ? 'The Suture' : `${title} — The Suture`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content="The Suture" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <slot name="head" />
+  </head>
+  <body>
+    <!-- Reading progress bar (visible only on article pages) -->
+    <div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+    <slot />
+
+    <!-- Scroll reveal script -->
+    <script>
+      const revealEls = document.querySelectorAll('[data-reveal]');
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('revealed');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.01, rootMargin: '0px 0px -20px 0px' }
+      );
+      revealEls.forEach((el) => observer.observe(el));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,284 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import { getAboutMembers } from '../../lib/cms';
+
+const members = await getAboutMembers();
+---
+
+<PageLayout
+  title="About"
+  description="The Suture is the independent editorial publication of Literature Club — sharing stories from medicine, campus life, and creative expression."
+>
+  <div class="about-page" style="padding-top: 64px;">
+
+    <div class="about-page__banner">
+      <div class="container">
+        <p class="eyebrow" data-reveal>About</p>
+        <h1 class="about-page__title" data-reveal data-delay="100">The Suture</h1>
+      </div>
+    </div>
+
+    <div class="container--narrow section-py">
+      <div class="about-page__body" data-reveal>
+        <p class="about-page__lead">
+          The Suture is the independent editorial publication of Literature Club —
+          a student-run journal at the intersection of medicine, campus life, and creative expression.
+        </p>
+
+        <p>
+          We believe in the power of storytelling within the medical college community.
+          From clinical case discussions and research summaries to poetry and photography,
+          The Suture is a space where every student voice matters.
+        </p>
+
+        <h2>Our Sections</h2>
+        <ul class="about-page__sections">
+          <li><strong>Clinical Case Corner</strong> — Real cases, rare diagnoses, educational insights.</li>
+          <li><strong>Decrypt &amp; Diagnose</strong> — Medical puzzles and diagnostic reasoning.</li>
+          <li><strong>Department Spotlight</strong> — Highlighting the people and work within each department.</li>
+          <li><strong>Healers Wellness</strong> — Mental health, wellbeing, and balance in medicine.</li>
+          <li><strong>Research Resource</strong> — Student research, methodology, and academic writing.</li>
+          <li><strong>World Health</strong> — Global health issues and public health perspectives.</li>
+          <li><strong>Campus Chronicles</strong> — Clubs, cultural events, NCC, sports, and student life.</li>
+          <li><strong>Beyond The Books</strong> — Artwork, photography, creative writing, and poetry.</li>
+        </ul>
+
+        <h2>Write for Us</h2>
+        <p>
+          The Suture welcomes contributions from all students of Literature Club.
+          Whether you have a clinical reflection, a piece of research, or a poem — we want to hear from you.
+          For submissions, questions, or comments, you can contact us directly at <a href="mailto:suturedigimag@psgimsr.ac.in" style="color: var(--color-accent); text-decoration: underline; font-weight: 500;">suturedigimag@psgimsr.ac.in</a>.
+        </p>
+
+        <a href="/suture/write-for-us" class="about-page__cta">
+          Submit an Article →
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Our Board Section ────────────────────────────────────── -->
+    {members.length > 0 && (
+      <section class="about-board section-py" id="board">
+        <div class="container">
+          <div class="about-board__header" data-reveal>
+            <p class="eyebrow">The People</p>
+            <h2 class="about-board__title">Our Board</h2>
+            <p class="about-board__sub">The minds behind Literature Club and The Suture.</p>
+          </div>
+
+          <div class="about-board__grid">
+            {members.map((member, i) => (
+              <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
+                {member.photo && (
+                  <div class="about-board__card-photo-wrap">
+                    <img src={member.photo} alt={member.name} class="about-board__card-photo" loading="lazy" />
+                  </div>
+                )}
+                <div class="about-board__card-content">
+                  <h3 class="about-board__card-name">{member.name}</h3>
+                  <p class="about-board__card-role">{member.role}</p>
+                  <p class="about-board__card-bio">{member.bio}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ── Instagram Section ────────────────────────────────────── -->
+    <section class="about-instagram section-py" id="instagram">
+      <div class="container text-center">
+        <div class="about-instagram__inner" data-reveal>
+          <p class="eyebrow" style="margin-bottom: var(--space-4);">Instagram Feed</p>
+          <h2 class="about-instagram__title" style="margin-bottom: var(--space-10); font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; color: var(--color-text-primary);">Follow Us On Instagram</h2>
+          <div class="about-instagram__widget-wrap" style="max-width: 1200px; margin: 0 auto; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface-hover); padding: var(--space-4); border: 1px solid var(--color-border);">
+            <behold-widget feed-id="dyDOswbye7ZO7FHg57yE"></behold-widget>
+            <script>
+              (() => {
+                if(window.__bhldScript)return;window.__bhldScript=true;
+                const d=document,s=d.createElement("script");s.type="module";
+                s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+              })();
+            </script>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</PageLayout>
+
+<style>
+  .about-page__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-12) var(--space-10);
+  }
+
+  .about-page__banner .eyebrow { margin-bottom: var(--space-3); }
+
+  .about-page__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+  }
+
+  .about-page__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .about-page__lead {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    line-height: var(--lh-snug);
+    color: var(--color-text-primary);
+    font-weight: 400;
+  }
+
+  .about-page__body p {
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-secondary);
+  }
+
+  .about-page__body h2 {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    margin-top: var(--space-4);
+    color: var(--color-text-primary);
+  }
+
+  .about-page__sections {
+    list-style: disc;
+    padding-left: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .about-page__sections li {
+    font-size: var(--fs-base);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+
+  .about-page__cta {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--color-accent);
+    transition: gap var(--dur-fast);
+    margin-top: var(--space-2);
+  }
+  .about-page__cta:hover { color: var(--color-accent-hover); }
+
+  /* ── Our Board Section ────────────────────────────────────── */
+  .about-board {
+    background: var(--color-surface-hover);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about-board__header {
+    margin-bottom: var(--space-10);
+    text-align: center;
+  }
+
+  .about-board__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .about-board__sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    max-width: 500px;
+    margin-inline: auto;
+  }
+
+  .about-board__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--space-8);
+  }
+
+  .about-board__card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--dur-normal) var(--ease-out-expo), box-shadow var(--dur-normal) var(--ease-out-expo);
+  }
+
+  .about-board__card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .about-board__card-photo-wrap {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--color-surface-hover);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about-board__card-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+
+  .about-board__card:hover .about-board__card-photo {
+    transform: scale(1.03);
+  }
+
+  .about-board__card-content {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .about-board__card-name {
+    font-family: var(--font-serif);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  .about-board__card-role {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+  }
+
+  .about-board__card-bio {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+
+  /* ── Instagram Section ────────────────────────────────────── */
+  .about-instagram {
+    background: var(--color-surface);
+  }
+</style>

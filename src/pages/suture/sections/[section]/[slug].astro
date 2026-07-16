@@ -1,0 +1,40 @@
+---
+/**
+ * Article page — /suture/sections/[section]/[slug]
+ * SSR: always renders fresh from Wix CMS
+ */
+export const prerender = false;
+
+import ArticleLayout from '../../../../layouts/ArticleLayout.astro';
+import { getArticleBySlug, getArticles, renderRichContent, SECTION_ROUTE_MAP, COLLECTION_NAMES } from '../../../../lib/cms';
+
+const { section, slug } = Astro.params as { section: string; slug: string };
+
+const collectionId = SECTION_ROUTE_MAP[section];
+if (!collectionId) return Astro.redirect('/suture/sections');
+
+const [article, relatedRaw] = await Promise.all([
+  getArticleBySlug(collectionId, slug),
+  getArticles(collectionId, 4),
+]);
+
+if (!article) return Astro.redirect('/suture/sections/' + section);
+
+// Exclude current article from related
+const related = relatedRaw.filter((a) => a.slug !== slug);
+const sectionName = COLLECTION_NAMES[section] ?? section;
+---
+
+<ArticleLayout
+  article={article}
+  relatedArticles={related}
+  sectionName={sectionName}
+  sectionHref={`/suture/sections/${section}`}
+>
+  <!-- Rich text body — render Wix rich content here -->
+  {article.body ? (
+    <div set:html={renderRichContent(article.body)} />
+  ) : (
+    <p style="color: var(--color-text-tertiary);">Article content is not available.</p>
+  )}
+</ArticleLayout>

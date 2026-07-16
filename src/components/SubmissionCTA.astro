@@ -1,0 +1,127 @@
+---
+/**
+ * SubmissionCTA.astro — "Write for The Suture" call-to-action section
+ * Full-width editorial section with a submission link.
+ */
+
+interface Props {
+  submissionUrl?: string;
+}
+
+const { submissionUrl = '/suture/write-for-us' } = Astro.props;
+---
+
+<section class="submission-cta" aria-label="Write for The Suture">
+  <div class="container">
+    <div class="submission-cta__inner">
+
+      <div class="submission-cta__text" data-reveal>
+        <p class="eyebrow">Contribute</p>
+        <h2 class="submission-cta__title">Write for The Suture</h2>
+        <p class="submission-cta__body">
+          Share your research, reflections, and stories with the student community.
+          The Suture welcomes submissions across all sections.
+        </p>
+      </div>
+
+      <div class="submission-cta__action" data-reveal data-delay="200">
+        <a href={submissionUrl} class="submission-cta__btn">
+          Submit an Article
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <p class="submission-cta__note">Open to all students of Literature Club.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .submission-cta {
+    background: var(--color-text-primary);
+    padding-block: clamp(4rem, 8vw, 7rem);
+  }
+
+  .submission-cta__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+  }
+
+  .submission-cta__text {
+    flex: 1;
+  }
+
+  .submission-cta__text .eyebrow {
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .submission-cta__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: var(--color-bg);
+    margin-bottom: var(--space-5);
+  }
+
+  .submission-cta__body {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+    color: rgba(250, 250, 248, 0.6);
+    max-width: 480px;
+  }
+
+  .submission-cta__action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-shrink: 0;
+  }
+
+  .submission-cta__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    padding: var(--space-4) var(--space-8);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    transition:
+      background var(--dur-fast),
+      gap var(--dur-fast);
+  }
+
+  .submission-cta__btn:hover {
+    background: #FFFFFF;
+    gap: var(--space-4);
+  }
+
+  .submission-cta__note {
+    font-size: var(--fs-xs);
+    color: rgba(250, 250, 248, 0.4);
+    letter-spacing: var(--ls-wide);
+  }
+
+  @media (max-width: 768px) {
+    .submission-cta__inner {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .submission-cta__title {
+      font-size: var(--fs-2xl);
+    }
+  }
+</style>

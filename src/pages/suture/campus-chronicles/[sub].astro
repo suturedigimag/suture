@@ -1,0 +1,76 @@
+---
+/**
+ * Campus sub-collection page — /suture/campus-chronicles/[sub]
+ * e.g. /suture/campus-chronicles/clubs
+ */
+import PageLayout from '../../../layouts/PageLayout.astro';
+import EditorialCard from '../../../components/EditorialCard.astro';
+import { getArticles, CAMPUS_ROUTE_MAP, COLLECTION_NAMES } from '../../../lib/cms';
+
+export async function getStaticPaths() {
+  return Object.entries(CAMPUS_ROUTE_MAP).map(([slug, collectionId]) => ({
+    params: { sub: slug },
+    props: { collectionId, sectionName: COLLECTION_NAMES[slug] ?? slug },
+  }));
+}
+
+interface Props {
+  collectionId: string;
+  sectionName: string;
+}
+
+const { collectionId, sectionName } = Astro.props;
+const articles = await getArticles(collectionId, 24);
+---
+
+<PageLayout title={sectionName} description={`${sectionName} — Campus Chronicles, The Suture.`}>
+  <div style="padding-top: 64px;">
+    <div class="section-landing__banner">
+      <div class="container">
+        <p class="eyebrow" data-reveal>Campus Chronicles</p>
+        <h1 class="section-landing__title" data-reveal data-delay="100">{sectionName}</h1>
+      </div>
+    </div>
+
+    <div class="container section-py">
+      {articles.length > 0 ? (
+        <div class="section-landing__grid">
+          {articles.map((article, i) => (
+            <EditorialCard
+              article={article}
+              href={`/suture/campus-chronicles/${Astro.params.sub}/${article.slug}`}
+              sectionLabel={sectionName}
+              delay={Math.min(i * 80, 400)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p class="empty-state">No articles yet. Check back soon.</p>
+      )}
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .section-landing__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-12) var(--space-10);
+  }
+  .section-landing__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+  }
+  .section-landing__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-6);
+  }
+  .empty-state {
+    text-align: center;
+    padding-block: var(--space-20);
+    color: var(--color-text-tertiary);
+  }
+</style>

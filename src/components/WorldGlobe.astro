@@ -1,0 +1,73 @@
+---
+/**
+ * WorldGlobe.astro — Interactive WebGL Globe component
+ * Uses Cobe for ultra-fast, smooth, interactive globe rendering.
+ */
+---
+<div class="globe-container">
+  <canvas id="globe-canvas" class="globe-canvas"></canvas>
+</div>
+
+<script>
+  import createGlobe from 'cobe';
+
+  const canvas = document.getElementById('globe-canvas') as HTMLCanvasElement | null;
+  if (canvas) {
+    let phi = 0;
+    const width = 400;
+    
+    // Markers on the globe representing PSG IMSR's global medical scope
+    const markers = [
+      { location: [11.0168, 76.9558], size: 0.1 },  // Coimbatore, India (PSG IMSR Root!)
+      { location: [19.076, 72.8777], size: 0.06 },   // Mumbai
+      { location: [40.7128, -74.006], size: 0.06 },  // New York City
+      { location: [51.5074, -0.1278], size: 0.06 },  // London
+      { location: [-33.8688, 151.2093], size: 0.06 }, // Sydney
+    ];
+
+    const globe = createGlobe(canvas, {
+      devicePixelRatio: window.devicePixelRatio || 1,
+      width: width * 2,
+      height: width * 2,
+      phi: 0,
+      theta: 0.3,
+      dark: 0,
+      diffuse: 1.2,
+      mapSamples: 16000,
+      mapBrightness: 6,
+      baseColor: [250/255, 250/255, 248/255], // Match warm off-white (#FAFAF8)
+      markerColor: [193/255, 18/255, 31/255], // Match brand medical red (#c1121f)
+      glowColor: [240/255, 240/255, 235/255],
+      markers: markers,
+      onRender: (state) => {
+        phi += 0.006;
+        state.phi = phi;
+      },
+    });
+
+    setTimeout(() => {
+      canvas.style.opacity = '1';
+    }, 100);
+  }
+</script>
+
+<style>
+  .globe-container {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .globe-canvas {
+    width: 320px !important;
+    height: 320px !important;
+    opacity: 0;
+    transition: opacity 0.8s ease-out;
+  }
+</style>

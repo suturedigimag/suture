@@ -1,0 +1,408 @@
+---
+/**
+ * SutureHero.astro — Custom Suture homepage hero
+ * Features:
+ *  - Canvas-based custom particles (vanilla JS version of Magic UI Particles)
+ *  - Aurora text effect for "where medicine meets daily life"
+ *  - TextAnimate effect for description paragraph
+ *  - Interactive fire/embers effect on the word "Embers"
+ */
+---
+
+<section class="suture-hero" aria-label="Welcome to The Suture">
+  <!-- Particles Canvas Container -->
+  <div class="suture-hero__particles" id="hero-particles" data-color="#c1121f">
+    <canvas id="particles-canvas"></canvas>
+  </div>
+
+  <div class="suture-hero__content container">
+    <div class="suture-hero__inner">
+      
+      <!-- Aurora Text Title -->
+      <h1 class="suture-hero__title">
+        <span class="aurora-wrapper">
+          <span class="aurora-text" aria-hidden="true">Where Medicine Meets Daily Life</span>
+        </span>
+      </h1>
+
+      <!-- Text Animate Description Paragraph -->
+      <p class="suture-hero__description" id="animate-paragraph">
+        Explore our very first edition of the Suture, to find a curated blend of clinical insight, campus events and student imagination. As we kindle the <span class="ember-text">Embers<span class="embers-holder"></span></span> of this initiative, we look forward to showcase the vibrant spirit of the students of PSG IMSR!
+      </p>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  // ── Particles Animation Logic ──────────────────────────────────────
+  const container = document.getElementById('hero-particles');
+  const canvas = document.getElementById('particles-canvas') as HTMLCanvasElement | null;
+  if (container && canvas) {
+    const ctx = canvas.getContext('2d');
+    const colorHex = container.getAttribute('data-color') || '#ffffff';
+    let w = container.offsetWidth;
+    let h = container.offsetHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    if (ctx) ctx.scale(dpr, dpr);
+
+    interface Particle {
+      x: number;
+      y: number;
+      size: number;
+      alpha: number;
+      targetAlpha: number;
+      dx: number;
+      dy: number;
+      magnetism: number;
+      translateX: number;
+      translateY: number;
+      color: number[];
+    }
+
+    const particles: Particle[] = [];
+    const quantity = 180; // More particles
+    const size = 0.6;
+    const staticity = 60;
+    const ease = 40;
+    const mouse = { x: 0, y: 0 };
+
+    // Curated brand color palette (Matching Suture red, aurora gradients, and warm elements)
+    const COLOR_PALETTE = [
+      [193, 18, 31],    // #c1121f (Medical Red)
+      [121, 40, 202],   // #7928ca (Purple/Violet)
+      [0, 112, 243],    // #0070F3 (Deep Blue)
+      [255, 0, 128],    // #FF0080 (Pink)
+      [245, 124, 0]     // #f57c00 (Warm Amber)
+    ];
+
+    function createParticle(): Particle {
+      const color = COLOR_PALETTE[Math.floor(Math.random() * COLOR_PALETTE.length)];
+      return {
+        x: Math.random() * w,
+        y: Math.random() * h,
+        size: Math.random() * 2.5 + size,
+        alpha: 0,
+        targetAlpha: parseFloat((Math.random() * 0.6 + 0.1).toFixed(1)),
+        dx: (Math.random() - 0.5) * 0.15,
+        dy: (Math.random() - 0.5) * 0.15,
+        magnetism: 0.1 + Math.random() * 3.5,
+        translateX: 0,
+        translateY: 0,
+        color
+      };
+    }
+
+    for (let i = 0; i < quantity; i++) {
+      particles.push(createParticle());
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left - w / 2;
+      mouse.y = e.clientY - rect.top - h / 2;
+    });
+
+    window.addEventListener('resize', () => {
+      w = container.offsetWidth;
+      h = container.offsetHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      if (ctx) ctx.scale(dpr, dpr);
+    });
+
+    function drawCircle(p: Particle) {
+      if (!ctx) return;
+      ctx.translate(p.translateX, p.translateY);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+      ctx.fillStyle = `rgba(${p.color.join(', ')}, ${p.alpha})`;
+      ctx.fill();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function animate() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, w, h);
+
+      particles.forEach((p, idx) => {
+        // Distance check for alpha transition
+        const edge = [
+          p.x + p.translateX - p.size,
+          w - p.x - p.translateX - p.size,
+          p.y + p.translateY - p.size,
+          h - p.y - p.translateY - p.size
+        ];
+        const closestEdge = Math.min(...edge);
+        const remapEdge = closestEdge < 0 ? 0 : Math.min(closestEdge / 20, 1);
+
+        if (remapEdge > 0.9) {
+          p.alpha += 0.015;
+          if (p.alpha > p.targetAlpha) p.alpha = p.targetAlpha;
+        } else {
+          p.alpha = p.targetAlpha * remapEdge;
+        }
+
+        p.x += p.dx;
+        p.y += p.dy;
+        p.translateX += (mouse.x / (staticity / p.magnetism) - p.translateX) / ease;
+        p.translateY += (mouse.y / (staticity / p.magnetism) - p.translateY) / ease;
+
+        drawCircle(p);
+
+        // Out of boundaries
+        if (p.x < -p.size || p.x > w + p.size || p.y < -p.size || p.y > h + p.size) {
+          particles[idx] = createParticle();
+        }
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  // ── Text Animate (Staggered Blur In Up) Logic ─────────────────────
+  const pNode = document.getElementById('animate-paragraph');
+  if (pNode) {
+    const containerHtml = pNode.innerHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = containerHtml;
+    
+    function wrapTextNodes(element: Node) {
+      if (element.nodeType === Node.TEXT_NODE) {
+        const textVal = element.nodeValue || '';
+        if (textVal.trim() === '') return;
+        const words = textVal.split(/(\s+)/);
+        const fragment = document.createDocumentFragment();
+        
+        words.forEach(word => {
+          if (word.trim() === '') {
+            fragment.appendChild(document.createTextNode(word));
+          } else {
+            const span = document.createElement('span');
+            span.className = 'word-animate';
+            span.textContent = word;
+            fragment.appendChild(span);
+          }
+        });
+        
+        element.parentNode?.replaceChild(fragment, element);
+      } else {
+        const children = Array.from(element.childNodes);
+        children.forEach(wrapTextNodes);
+      }
+    }
+    
+    wrapTextNodes(tempDiv);
+    pNode.innerHTML = tempDiv.innerHTML;
+    
+    // Animate words
+    const animWords = pNode.querySelectorAll('.word-animate, .ember-text');
+    animWords.forEach((wordEl, idx) => {
+      const el = wordEl as HTMLElement;
+      el.style.opacity = '0';
+      el.style.filter = 'blur(8px)';
+      el.style.transform = 'translateY(12px)';
+      el.style.display = 'inline-block';
+      el.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+      el.style.transitionDelay = `${idx * 25}ms`;
+      
+      // Trigger animation
+      setTimeout(() => {
+        el.style.opacity = '1';
+        el.style.filter = 'blur(0px)';
+        el.style.transform = 'translateY(0px)';
+      }, 100);
+    });
+  }
+
+  // ── Embers Fire Particle Effect ───────────────────────────────────
+  const embersHolders = document.querySelectorAll('.embers-holder');
+  embersHolders.forEach(holder => {
+    const parentWidth = (holder.parentElement?.offsetWidth || 100);
+    const firecount = Math.max(Math.floor(parentWidth / 6), 12);
+    
+    for (let i = 0; i < firecount; i++) {
+      const size = Math.floor(Math.random() * 5) + 6; // 6 to 10px
+      const left = Math.floor(Math.random() * 110) - 5;
+      const top = Math.floor(Math.random() * 30) + 40;
+      const delay = Math.random() * 0.8;
+      
+      const particle = document.createElement('span');
+      particle.className = 'ember-particle';
+      particle.style.cssText = `
+        position: absolute;
+        top: ${top}%;
+        left: ${left}%;
+        width: ${size}px;
+        height: ${size}px;
+        animation: embers-fire 0.8s linear infinite;
+        animation-delay: ${delay}s;
+        background-color: rgba(244, 80, 54, 0.6);
+        border-radius: 40px;
+        border-top-right-radius: 0px;
+        transform: rotate(-45deg);
+        pointer-events: none;
+        opacity: 0;
+      `;
+      
+      const core = document.createElement('span');
+      core.style.cssText = `
+        position: absolute;
+        content: '';
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60%;
+        height: 60%;
+        border-radius: 40px;
+        border-top-right-radius: 0px;
+        background-color: rgba(255, 193, 7, 0.8);
+      `;
+      particle.appendChild(core);
+      holder.appendChild(particle);
+    }
+  });
+</script>
+
+<style>
+  .suture-hero {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    background: #FAFAF8; /* Warm off-white background */
+    overflow: hidden;
+    padding-top: 100px;
+    padding-bottom: var(--space-12);
+  }
+
+  /* Particles canvas */
+  .suture-hero__particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  #particles-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .suture-hero__content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+  }
+
+  .suture-hero__inner {
+    max-width: 800px;
+    text-align: left;
+  }
+
+  /* Aurora Title Effect */
+  .suture-hero__title {
+    margin-bottom: var(--space-8);
+  }
+
+  .aurora-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .aurora-text {
+    font-family: var(--font-serif);
+    font-size: clamp(2.8rem, 6.5vw, 5.2rem);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    background-image: linear-gradient(135deg, #c1121f, #7928ca, #c1121f, #f57c00, #c1121f);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    animation: aurora 10s ease-in-out infinite alternate;
+    display: inline-block;
+  }
+
+  @keyframes aurora {
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-1deg) scale(0.98);
+    }
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(1deg) scale(1.02);
+    }
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-1deg) scale(0.98);
+    }
+  }
+
+  /* Description paragraph styling */
+  .suture-hero__description {
+    font-family: var(--font-sans);
+    font-size: var(--fs-lg);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-secondary); /* Dark text on white background */
+    max-width: 640px;
+    margin: 0;
+  }
+
+  /* Word Animate style overrides */
+  :global(.word-animate) {
+    display: inline-block;
+    margin-right: 0.28em;
+  }
+
+  /* Embers Glowing Text and Flame Particles */
+  .ember-text {
+    position: relative;
+    display: inline-block;
+    font-weight: 700;
+    color: #f57c00;
+    text-shadow: 0 0 4px rgba(244, 80, 54, 0.6), 0 0 10px rgba(255, 193, 7, 0.4);
+    margin-right: 0.28em;
+  }
+
+  .embers-holder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* Ember particle animations */
+  @keyframes embers-fire {
+    0% {
+      transform: rotate(-70deg) translateY(0%) scale(1);
+      opacity: 0;
+    }
+    20% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: rotate(-20deg) translateY(-50px) scale(0.4);
+      opacity: 0;
+    }
+  }
+</style>

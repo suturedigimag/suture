@@ -1,0 +1,157 @@
+---
+/**
+ * SectionTicker.astro — Scroll-Based Velocity Marquee
+ * Scrolling text whose speed and direction dynamically shifts based on the user's scroll speed.
+ * Pure Vanilla JS + CSS implementation matching Magic UI's Scroll Based Velocity effect.
+ */
+
+const row1 = [
+  'Clinical Case Corner',
+  'Decrypt & Diagnose',
+  'Department Spotlight',
+  'Healers Wellness',
+  'Research Resource',
+  'World Health',
+];
+
+const row2 = [
+  'Campus Chronicles',
+  'Beyond The Books',
+  'Student Achievements',
+  'Creative Writing',
+  'Photography',
+  'Poetry',
+];
+---
+
+<div class="velocity-ticker" aria-hidden="true" id="velocity-container">
+  <!-- Row 1: Left moving -->
+  <div class="velocity-row" data-direction="-1" data-speed="1.2">
+    <div class="velocity-track" id="track-1">
+      {/* Repeated items for seamlessness */}
+      {Array.from({ length: 4 }).map(() => (
+        row1.map((item) => (
+          <span class="velocity-item">
+            {item}
+            <span class="velocity-dot">·</span>
+          </span>
+        ))
+      ))}
+    </div>
+  </div>
+
+  <!-- Row 2: Right moving -->
+  <div class="velocity-row" data-direction="1" data-speed="1.2">
+    <div class="velocity-track" id="track-2">
+      {Array.from({ length: 4 }).map(() => (
+        row2.map((item) => (
+          <span class="velocity-item">
+            {item}
+            <span class="velocity-dot">·</span>
+          </span>
+        ))
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  const container = document.getElementById('velocity-container');
+  if (container) {
+    const rows = container.querySelectorAll('.velocity-row');
+    const tracks = Array.from(rows).map(row => row.querySelector('.velocity-track') as HTMLElement);
+    const directions = Array.from(rows).map(row => parseFloat(row.getAttribute('data-direction') || '1'));
+    const baseVelocities = Array.from(rows).map(row => parseFloat(row.getAttribute('data-speed') || '1'));
+
+    let lastScrollY = window.scrollY;
+    let scrollVelocity = 0;
+    let smoothVelocity = 0;
+    const offsets = [0, 0];
+
+    // Scroll listener to calculate raw velocity
+    window.addEventListener('scroll', () => {
+      const currentScrollY = window.scrollY;
+      const diff = currentScrollY - lastScrollY;
+      scrollVelocity = diff * 0.15; // Velocity scale factor
+      lastScrollY = currentScrollY;
+    }, { passive: true });
+
+    function animate() {
+      // Damping spring effect: smoothVelocity converges on scrollVelocity
+      // Return scrollVelocity back to 0 slowly if no scroll event occurs
+      scrollVelocity *= 0.92; 
+      smoothVelocity += (scrollVelocity - smoothVelocity) * 0.08;
+
+      const velocityMultiplier = 1 + Math.min(5, Math.abs(smoothVelocity));
+
+      tracks.forEach((track, idx) => {
+        if (!track) return;
+
+        const dir = directions[idx];
+        const base = baseVelocities[idx];
+        const width = track.scrollWidth / 2; // Real width of duplicate track loop
+
+        // Increment offset based on base velocity and scroll speed
+        offsets[idx] += dir * (base + Math.abs(smoothVelocity) * 1.5) * 0.5;
+
+        // Wrap around for seamless loop
+        if (Math.abs(offsets[idx]) >= width) {
+          offsets[idx] = offsets[idx] % width;
+        }
+
+        // Apply hardware-accelerated transform
+        track.style.transform = `translate3d(${offsets[idx]}px, 0, 0)`;
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+</script>
+
+<style>
+  .velocity-ticker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    overflow: hidden;
+    padding-block: var(--space-8);
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    user-select: none;
+    width: 100%;
+  }
+
+  .velocity-row {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    display: flex;
+  }
+
+  .velocity-track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  .velocity-item {
+    font-family: var(--font-sans);
+    font-size: clamp(1.1rem, 2.5vw, 2rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    color: var(--color-text-tertiary);
+    padding-inline: var(--space-4);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .velocity-dot {
+    margin-left: var(--space-8);
+    color: var(--color-accent);
+  }
+</style>

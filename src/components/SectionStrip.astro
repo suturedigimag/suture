@@ -1,0 +1,115 @@
+---
+/**
+ * SectionStrip.astro — Per-section article row on homepage
+ * Shows a section label, "View All" link, and a 3-column article grid.
+ */
+import EditorialCard from './EditorialCard.astro';
+import { getArticleUrl, type Article } from '../lib/cms';
+
+interface Props {
+  title: string;
+  href: string;
+  articles: Article[];
+  description?: string;
+}
+
+const { title, href, articles, description } = Astro.props;
+
+if (articles.length === 0) return;
+---
+
+<section class="section-strip section-py" aria-labelledby={`strip-${title.replace(/\s/g, '-')}`}>
+  <div class="container">
+
+    <!-- Header row -->
+    <div class="section-strip__header" data-reveal>
+      <div class="section-strip__title-block">
+        <h2 class="section-strip__title" id={`strip-${title.replace(/\s/g, '-')}`}>{title}</h2>
+        {description && <p class="section-strip__description">{description}</p>}
+      </div>
+      <a href={href} class="section-strip__view-all" aria-label={`View all ${title} articles`}>
+        View All
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- Article grid -->
+    <div class="section-strip__grid">
+      {articles.slice(0, 3).map((article, i) => (
+        <EditorialCard
+          article={article}
+          href={getArticleUrl(article)}
+          sectionLabel={title}
+          delay={i * 100}
+        />
+      ))}
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .section-strip__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .section-strip__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .section-strip__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+  }
+
+  .section-strip__description {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    max-width: 600px;
+    margin: 0;
+  }
+
+  .section-strip__view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: gap var(--dur-fast);
+  }
+
+  .section-strip__view-all:hover {
+    gap: var(--space-3);
+  }
+
+  .section-strip__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 640px) {
+    .section-strip__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

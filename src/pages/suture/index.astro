@@ -1,0 +1,223 @@
+---
+/**
+ * Suture Home — The Suture Editorial Publication
+ * Route: /suture/suture
+ */
+import PageLayout from '../../layouts/PageLayout.astro';
+import SutureHero from '../../components/SutureHero.astro';
+import FeaturedStory from '../../components/FeaturedStory.astro';
+import MagazineGrid from '../../components/MagazineGrid.astro';
+import SectionStrip from '../../components/SectionStrip.astro';
+import SectionTicker from '../../components/SectionTicker.astro';
+import InstagramWall from '../../components/InstagramWall.astro';
+import SubmissionCTA from '../../components/SubmissionCTA.astro';
+import {
+  getMostRecentArticle,
+  getArticles,
+  getArticleUrl,
+  COLLECTION_IDS,
+} from '../../lib/cms';
+
+// Parallel data fetch — all sections at once
+const [
+  heroArticle,
+  sectionsAllRaw,
+  campusChroniclesAllRaw,
+  worldHealth,
+  beyondTheBooksAllRaw,
+] = await Promise.all([
+  getMostRecentArticle(),
+  // Sections — clinical + research mix
+  Promise.all([
+    getArticles(COLLECTION_IDS.clinicalCaseCorner, 6),
+    getArticles(COLLECTION_IDS.decryptAndDiagnose, 2),
+    getArticles(COLLECTION_IDS.departmentSpotlight, 2),
+  ]).then(([a, b, c]) => [...a, ...b, ...c]),
+  // Campus Chronicles
+  Promise.all([
+    getArticles(COLLECTION_IDS.clubs, 3),
+    getArticles(COLLECTION_IDS.cultural, 3),
+    getArticles(COLLECTION_IDS.sports, 2),
+  ]).then(([a, b, c]) => [...a, ...b, ...c]),
+  // World Health standalone strip
+  getArticles(COLLECTION_IDS.worldHealth, 3),
+  // Beyond The Books
+  Promise.all([
+    getArticles(COLLECTION_IDS.artwork, 2),
+    getArticles(COLLECTION_IDS.creativeWriting, 2),
+    getArticles(COLLECTION_IDS.photography, 2),
+    getArticles(COLLECTION_IDS.poetry, 2),
+  ]).then(([a, b, c, d]) => [...a, ...b, ...c, ...d]),
+]);
+
+// Sort arrays by date descending
+const sectionsAll = [...sectionsAllRaw].sort(
+  (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+);
+
+const campusChroniclesAll = [...campusChroniclesAllRaw].sort(
+  (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+);
+
+const beyondTheBooksAll = [...beyondTheBooksAllRaw].sort(
+  (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+);
+
+// Featured = second article overall (hero takes first)
+const allRecent = [...sectionsAll, ...campusChroniclesAll].sort(
+  (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+);
+const featuredArticle = allRecent.find(
+  (a) => a._id !== heroArticle?._id
+) ?? allRecent[0] ?? null;
+---
+
+<PageLayout
+  title="The Suture"
+  description="The independent editorial publication of Literature Club — medicine, campus life, and creative expression."
+>
+
+  <!-- 1. Cinematic Hero with Particle Background and Typography Effects -->
+  <SutureHero />
+
+  <!-- 2. Featured Story -->
+  {featuredArticle && (
+    <FeaturedStory
+      article={featuredArticle}
+      href={getArticleUrl(featuredArticle)}
+      sectionLabel="Featured"
+    />
+  )}
+
+  <!-- 3. Section ticker -->
+  <SectionTicker />
+
+  <!-- 4. Sections — Magazine Grid -->
+  {sectionsAll.length > 0 && (
+    <section class="home-section section-py" aria-labelledby="sections-heading">
+      <div class="container">
+        <div class="home-section__header" data-reveal>
+          <div class="home-section__title-block">
+            <h2 class="home-section__title" id="sections-heading">Sections</h2>
+            <p class="home-section__description">In-depth writing on clinical medicine, public health, research, and wellbeing.</p>
+          </div>
+          <a href="/suture/sections" class="home-section__view-all">
+            View All
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <hr class="divider" />
+        <MagazineGrid articles={sectionsAll} sectionLabel="Sections" />
+      </div>
+    </section>
+  )}
+
+  <!-- 5. Campus Chronicles strip -->
+  {campusChroniclesAll.length > 0 && (
+    <SectionStrip
+      title="Campus Chronicles"
+      href="/suture/campus-chronicles"
+      articles={campusChroniclesAll}
+      description="The pulse of the campus. Find out about the latest events, sports tournaments, club meets, and everything else happening inside PSG IMSR. Stay connected and stay updated."
+    />
+  )}
+
+  <!-- 6. World Health strip -->
+  {worldHealth.length > 0 && (
+    <SectionStrip
+      title="World Health"
+      href="/suture/sections/world-health"
+      articles={worldHealth}
+      description="Stay informed on the history and significance of major global health events with this section. Every edition focuses on a particular day of significance and this edition brings forward to you the World Organ Transplantation day - August 13 2026."
+    />
+  )}
+
+  <!-- 7. Beyond The Books strip -->
+  {beyondTheBooksAll.length > 0 && (
+    <SectionStrip
+      title="Beyond The Books"
+      href="/suture/beyond-the-books"
+      articles={beyondTheBooksAll}
+      description="Time to drop the textbooks and explore your creative side. Here is a curated space showcasing the artistic, poetic and photographic talents of the students of PSG IMSR."
+    />
+  )}
+
+  <!-- 8. Section ticker (second instance) -->
+  <SectionTicker />
+
+  <!-- 9. Instagram Wall -->
+  <InstagramWall />
+
+  <!-- 10. Submission CTA -->
+  <SubmissionCTA />
+
+</PageLayout>
+
+<style>
+  .home-welcome {
+    text-align: center;
+    background: var(--color-surface-hover);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .home-welcome__text {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-4);
+    font-weight: 400;
+  }
+
+  .home-welcome__sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    max-width: 500px;
+    margin-inline: auto;
+  }
+
+  .home-section__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .home-section__title-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .home-section__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    margin: 0;
+  }
+
+  .home-section__description {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    max-width: 600px;
+    margin: 0;
+  }
+
+  .home-section__view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-accent);
+    white-space: nowrap;
+    transition: gap var(--dur-fast);
+  }
+  .home-section__view-all:hover { gap: var(--space-3); }
+</style>

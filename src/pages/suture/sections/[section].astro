@@ -1,0 +1,154 @@
+---
+/**
+ * Section landing page — /suture/sections/[section]
+ * e.g. /suture/sections/clinical-case-corner
+ *
+ * Static generation: one page per sub-collection in SECTION_ROUTE_MAP
+ */
+import PageLayout from '../../../layouts/PageLayout.astro';
+import EditorialCard from '../../../components/EditorialCard.astro';
+import SearchAndFilters from '../../../components/SearchAndFilters.astro';
+import WorldGlobe from '../../../components/WorldGlobe.astro';
+import {
+  getArticles,
+  SECTION_ROUTE_MAP,
+  COLLECTION_NAMES,
+} from '../../../lib/cms';
+
+export async function getStaticPaths() {
+  return Object.entries(SECTION_ROUTE_MAP).map(([slug, collectionId]) => ({
+    params: { section: slug },
+    props: { collectionId, sectionName: COLLECTION_NAMES[slug] ?? slug },
+  }));
+}
+
+interface Props {
+  collectionId: string;
+  sectionName: string;
+}
+
+const { collectionId, sectionName } = Astro.props;
+const { section } = Astro.params;
+
+const articles = await getArticles(collectionId, 24);
+---
+
+<PageLayout
+  title={sectionName}
+  description={`${sectionName} — articles and stories from The Suture.`}
+>
+  <div class="section-landing" style="padding-top: 64px;">
+
+    <!-- Banner -->
+    <div class="section-landing__banner">
+      <div class="container section-landing__banner-grid">
+        <div class="section-landing__banner-info">
+          <p class="eyebrow" data-reveal>Sections</p>
+          <h1 class="section-landing__title" data-reveal data-delay="100">{sectionName}</h1>
+          {section === 'world-health' && (
+            <p class="section-landing__description" data-reveal data-delay="150">
+              Stay informed on the history and significance of major global health events. Every edition focuses on a particular day of significance, bringing you global coverage, trivia, and clinical breakthroughs.
+            </p>
+          )}
+        </div>
+        {section === 'world-health' && (
+          <div class="section-landing__banner-visual" data-reveal data-delay="200">
+            <WorldGlobe />
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- Articles grid -->
+    <div class="container section-py">
+      {articles.length > 0 ? (
+        <>
+          <SearchAndFilters placeholder={`Search ${sectionName}...`} />
+          
+          <div id="filter-empty-state" style="display: none; text-align: center; padding-block: var(--space-12); color: var(--color-text-tertiary);" data-reveal>
+            <p>No articles match your search query.</p>
+          </div>
+
+          <div class="section-landing__grid">
+            {articles.map((article, i) => (
+              <EditorialCard
+                article={article}
+                href={`/suture/sections/${section}/${article.slug}`}
+                sectionLabel={sectionName}
+                delay={Math.min(i * 80, 400)}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div class="section-landing__empty" data-reveal>
+          <p>No articles published yet. Check back soon.</p>
+        </div>
+      )}
+    </div>
+
+  </div>
+</PageLayout>
+
+<style>
+  .section-landing__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-10);
+  }
+
+  .section-landing__banner-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+  }
+
+  .section-landing__banner-info {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .section-landing__banner-visual {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .section-landing__banner .eyebrow {
+    margin-bottom: var(--space-3);
+  }
+
+  .section-landing__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    line-height: var(--lh-tight);
+    color: var(--color-text-primary);
+  }
+
+  .section-landing__description {
+    margin-top: var(--space-4);
+    color: var(--color-text-secondary);
+    max-width: 500px;
+    font-family: var(--font-sans);
+    line-height: var(--lh-relaxed);
+    font-size: var(--fs-sm);
+  }
+
+  .section-landing__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .section-landing__empty {
+    text-align: center;
+    padding-block: var(--space-20);
+    color: var(--color-text-tertiary);
+    font-size: var(--fs-md);
+  }
+</style>

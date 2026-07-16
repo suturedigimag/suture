@@ -1,0 +1,135 @@
+---
+/**
+ * Campus Chronicles landing — /suture/campus-chronicles
+ */
+import PageLayout from '../../../layouts/PageLayout.astro';
+import EditorialCard from '../../../components/EditorialCard.astro';
+import {
+  getArticles,
+  CAMPUS_ROUTE_MAP,
+  COLLECTION_NAMES,
+} from '../../../lib/cms';
+
+const subCollections = Object.entries(CAMPUS_ROUTE_MAP);
+
+const SUB_DESCRIPTIONS: Record<string, string> = {
+  'clubs':                 'The Literature club is a hub of creativity, debate and learning. Join us to refine your skills, meet peers who share your passions and explore different mediums.',
+  'cultural':              'The PSG Community comes alive with celebrations, festivals and cultural events. Find out about the latest events, dates and performance highlights.',
+  'ncc':                   'Explore the discipline, training, and achievements of our National Cadet Corps (NCC) division on campus. From parades to social initiatives, follow their journey.',
+  'sports':                'Athletes push their limits in the inter college tournaments and clinical leagues. Explore the details of sports meets, triumphs and details of matches in this section.',
+  'student-achievements':  'Who is making PSG IMSR Proud this year? Check out the academic accolades, research grants and competition wins of our fellow students.',
+  'yrc':                   'The youth Red Cross is a platform for student volunteering, health drives and community service. Find out about our initiatives and how you can join the cause.',
+};
+
+const previews = await Promise.all(
+  subCollections.map(async ([slug, collectionId]) => {
+    const articles = await getArticles(collectionId, 3);
+    return { slug, name: COLLECTION_NAMES[slug] ?? slug, articles };
+  })
+);
+---
+
+<PageLayout
+  title="Campus Chronicles"
+  description="Stories from campus life — clubs, cultural events, NCC, sports, student achievements, and YRC."
+>
+  <div style="padding-top: 64px;">
+    <div class="section-landing__banner">
+      <div class="container">
+        <p class="eyebrow" data-reveal>The Suture</p>
+        <h1 class="section-landing__title" data-reveal data-delay="100">Campus Chronicles</h1>
+        <p class="section-landing__desc" data-reveal data-delay="150" style="margin-top: var(--space-4); color: var(--color-text-secondary); max-width: 600px; font-size: var(--fs-md); line-height: var(--lh-relaxed);">
+          The pulse of the campus. Find out about the latest events, sports tournaments, club meets, and everything else happening inside PSG IMSR. Stay connected and stay updated.
+        </p>
+      </div>
+    </div>
+
+    <div class="container section-py">
+      {previews.map(({ slug, name, articles }) => (
+        articles.length > 0 && (
+          <div class="cc-section" data-reveal>
+            <div class="cc-section__header">
+              <h2 class="cc-section__name">
+                <a href={`/suture/campus-chronicles/${slug}`}>{name}</a>
+              </h2>
+              <a href={`/suture/campus-chronicles/${slug}`} class="cc-section__view-all">
+                View All →
+              </a>
+            </div>
+            {SUB_DESCRIPTIONS[slug] && (
+              <p class="cc-section__description">{SUB_DESCRIPTIONS[slug]}</p>
+            )}
+            <hr class="divider" style="margin-block: var(--space-4) var(--space-6);" />
+            <div class="cc-section__grid">
+              {articles.map((article, i) => (
+                <EditorialCard
+                  article={article}
+                  href={`/suture/campus-chronicles/${slug}/${article.slug}`}
+                  sectionLabel={name}
+                  delay={i * 80}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+    </div>
+  </div>
+</PageLayout>
+
+<style>
+  .section-landing__banner {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding-block: var(--space-12) var(--space-10);
+  }
+  .section-landing__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-3xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+  }
+
+  .cc-section {
+    margin-bottom: var(--space-16);
+  }
+
+  .cc-section__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .cc-section__name {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+  }
+  .cc-section__name a { transition: color var(--dur-fast); }
+  .cc-section__name a:hover { color: var(--color-accent); }
+
+  .cc-section__view-all {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-accent);
+    white-space: nowrap;
+    transition: gap var(--dur-fast);
+  }
+
+  .cc-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .cc-section__description {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+    max-width: 600px;
+    margin-top: var(--space-2);
+    margin-bottom: 0;
+  }
+</style>

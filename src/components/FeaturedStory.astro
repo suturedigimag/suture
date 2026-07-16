@@ -1,0 +1,178 @@
+---
+/**
+ * FeaturedStory.astro — Large featured article card
+ * 60/40 image+text split layout. Pulls the second most-recent article.
+ */
+import type { Article } from '../lib/cms';
+
+interface Props {
+  article: Article;
+  href: string;
+  sectionLabel?: string;
+}
+
+const { article, href, sectionLabel } = Astro.props;
+
+const formattedDate = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+}).format(new Date(article._createdDate));
+---
+
+<section class="featured-story section-py" aria-label="Featured story">
+  <div class="container">
+
+    <p class="eyebrow featured-story__eyebrow" data-reveal>Featured Story</p>
+
+    <a href={href} class="featured-story__card" data-reveal data-delay="100" aria-label={`Read featured: ${article.title}`}>
+
+      <!-- Image -->
+      <div class="featured-story__img-wrap">
+        {article.coverImage ? (
+          <img
+            src={article.coverImage}
+            alt={article.title}
+            loading="lazy"
+            decoding="async"
+            class="featured-story__img"
+          />
+        ) : (
+          <div class="featured-story__img-placeholder" aria-hidden="true"></div>
+        )}
+      </div>
+
+      <!-- Content -->
+      <div class="featured-story__content">
+        {sectionLabel && (
+          <p class="eyebrow featured-story__section">{sectionLabel}</p>
+        )}
+        <h2 class="featured-story__title">{article.title}</h2>
+
+        <div class="featured-story__meta">
+          {article.author && (
+            <span class="featured-story__author">{article.author}</span>
+          )}
+          {article.author && <span aria-hidden="true">·</span>}
+          <time datetime={article._createdDate}>{formattedDate}</time>
+        </div>
+
+        <span class="featured-story__cta">
+          Read Story
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<style>
+  .featured-story__eyebrow {
+    margin-bottom: var(--space-6);
+  }
+
+  .featured-story__card {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: var(--space-10);
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    transition:
+      box-shadow var(--dur-normal) var(--ease-out-expo),
+      border-color var(--dur-normal);
+  }
+
+  .featured-story__card:hover {
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-border-strong);
+  }
+
+  /* Image */
+  .featured-story__img-wrap {
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+  }
+
+  .featured-story__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--dur-slower) var(--ease-out-expo);
+  }
+
+  .featured-story__card:hover .featured-story__img {
+    transform: scale(1.04);
+  }
+
+  .featured-story__img-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-border), var(--color-surface-hover));
+  }
+
+  /* Content */
+  .featured-story__content {
+    padding: var(--space-10) var(--space-10) var(--space-10) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .featured-story__section {
+    /* eyebrow already styled */
+  }
+
+  .featured-story__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+  }
+
+  .featured-story__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  .featured-story__author {
+    font-weight: 500;
+    color: var(--color-text-secondary);
+  }
+
+  .featured-story__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--color-accent);
+    margin-top: var(--space-2);
+    transition: gap var(--dur-fast);
+  }
+
+  .featured-story__card:hover .featured-story__cta {
+    gap: var(--space-3);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .featured-story__card {
+      grid-template-columns: 1fr;
+    }
+
+    .featured-story__content {
+      padding: var(--space-6);
+    }
+  }
+</style>
