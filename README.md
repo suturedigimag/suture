@@ -72,26 +72,4 @@ Wix CMS rich text fields are stored in the Ricos JSON tree format. A custom rend
 
 ---
 
-## 🛠️ Development & Commands
 
-### Prerequisites
-Create a `.env` file at the root of the project and specify your Wix credentials:
-```env
-WIX_CLIENT_ID=<your-wix-client-id>
-```
-
-### Installation
-```bash
-npm install
-```
-
-### Run Locally
-```bash
-npm run dev
-```
-
-### Production Build
-Generates a highly optimized build ready to deploy on Vercel or Netlify:
-```bash
-npm run build
-```
