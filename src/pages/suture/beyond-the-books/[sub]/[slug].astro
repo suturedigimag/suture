@@ -31,7 +31,7 @@ const sectionName = COLLECTION_NAMES[sub] ?? sub;
   sectionHref={`/suture/beyond-the-books/${sub}`}
 >
   {article.body ? (
-    <div set:html={renderRichContent(article.body)} />
+    <div set:html={renderRichContent(article.body, true)} />
   ) : (
     <p style="color: var(--color-text-tertiary);">Article content is not available.</p>
   )}

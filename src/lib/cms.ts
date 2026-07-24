@@ -133,12 +133,11 @@ export async function getArticleBySlug(
     )) as any;
 
     const mappedItems = response.items.map((item: any) => mapItem(item, collectionId));
-    const targetSlug = decodeURIComponent(slug).toLowerCase().trim();
+    const targetSlug = slugify(decodeURIComponent(slug));
 
     const found = mappedItems.find((item: Article) => {
-      if (item.slug.toLowerCase() === targetSlug) return true;
+      if (slugify(item.slug) === targetSlug) return true;
       if (item._id === slug) return true;
-      if (slugify(item.title) === slugify(targetSlug)) return true;
       if (slugify(item.title) === targetSlug) return true;
 
       // Match raw link fields
@@ -146,8 +145,8 @@ export async function getArticleBySlug(
       if (rawItem) {
         for (const key of Object.keys(rawItem)) {
           if (key.startsWith('link-') && typeof rawItem[key] === 'string') {
-            const val = decodeURIComponent(rawItem[key]).toLowerCase();
-            if (val.endsWith('/' + targetSlug) || val.endsWith('/' + slug.toLowerCase())) {
+            const val = decodeURIComponent(rawItem[key]);
+            if (slugify(val).endsWith(targetSlug)) {
               return true;
             }
           }
@@ -365,16 +364,19 @@ function extractFirstImageFromRichContent(body: any): string | undefined {
 
 // Helper to extract the slug from wix dynamic link fields if slug is missing
 function getSlugFromItem(data: any, id: string): string {
-  if (data.slug) return data.slug;
+  if (data.slug) return slugify(data.slug);
   for (const key of Object.keys(data)) {
     if (key.startsWith('link-') && typeof data[key] === 'string') {
       const val = data[key];
       const parts = val.split('/');
       const lastPart = parts[parts.length - 1];
-      if (lastPart) return decodeURIComponent(lastPart);
+      if (lastPart) {
+        const cleaned = slugify(decodeURIComponent(lastPart));
+        if (cleaned) return cleaned;
+      }
     }
   }
-  return id;
+  return slugify(data.title) || id;
 }
 
 function mapItem(item: any, collectionId: string): Article {
@@ -486,7 +488,7 @@ function getFallbackArticles(collectionId: string, limit: number): Article[] {
   return [];
 }
 
-export function renderRichContent(body: any): string {
+export function renderRichContent(body: any, isBeyondBooks = false): string {
   if (!body) return '';
 
   // If it's a string, it might be raw HTML or stringified JSON
@@ -579,19 +581,12 @@ export function renderRichContent(body: any): string {
         const alt = node.imageData?.altText ?? '';
         const caption = node.imageData?.caption ?? '';
         const figCaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : '';
-        return `<figure class="article-image"><img src="${imgUrl}" alt="${escapeHtml(alt)}" loading="lazy" />${figCaption}</figure>`;
+        return `<figure class="article-image"><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
       }
 
       case 'GALLERY': {
-        const items = node.galleryData?.items ?? [];
-        if (items.length === 0) return '';
-        const imgs = items.map((item: any) => {
-          const src = item.image?.media?.src?.url ?? item.image?.src?.url ?? '';
-          if (!src) return '';
-          const imgUrl = getWixImageUrl(src);
-          return `<div class="article-gallery__item"><img src="${imgUrl}" alt="" loading="lazy" /></div>`;
-        }).join('');
-        return `<div class="article-gallery">${imgs}</div>`;
+        // Handled cleanly by ArticleGallery component in ArticleLayout
+        return '';
       }
 
       case 'BULLETED_LIST': {
@@ -730,8 +725,18 @@ export function extractArticlePhotos(article: Article): ArticlePhoto[] {
     });
   }
 
-  const body = article.body;
+  let body = article.body;
   if (body) {
+    if (typeof body === 'string') {
+      if (body.trim().startsWith('{') || body.trim().startsWith('[')) {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          // keep as string
+        }
+      }
+    }
+
     if (typeof body === 'string') {
       const imgMatches = Array.from(body.matchAll(/<img[^>]+src=["']([^"']+)["']/gi));
       for (const match of imgMatches) {

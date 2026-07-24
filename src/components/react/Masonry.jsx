@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import './Masonry.css';
 
@@ -25,9 +25,17 @@ const useMeasure = () => {
 
   useLayoutEffect(() => {
     if (!ref.current) return;
+    const initialWidth = ref.current.clientWidth || ref.current.getBoundingClientRect().width || 0;
+    const initialHeight = ref.current.clientHeight || ref.current.getBoundingClientRect().height || 0;
+    if (initialWidth > 0) {
+      setSize({ width: initialWidth, height: initialHeight });
+    }
+
     const ro = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setSize({ width, height });
+      if (width > 0) {
+        setSize({ width, height });
+      }
     });
     ro.observe(ref.current);
     return () => ro.disconnect();
@@ -101,7 +109,12 @@ const Masonry = ({
 
   useEffect(() => {
     if (!items || !items.length) return;
-    preloadImages(items.map(i => i.img)).then(() => setImagesReady(true));
+    let timer = setTimeout(() => setImagesReady(true), 300);
+    preloadImages(items.map(i => i.img)).then(() => {
+      clearTimeout(timer);
+      setImagesReady(true);
+    });
+    return () => clearTimeout(timer);
   }, [items]);
 
   const grid = useMemo(() => {
