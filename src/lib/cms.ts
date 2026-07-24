@@ -700,3 +700,67 @@ export async function getAboutMembers(): Promise<AboutMember[]> {
     return [];
   }
 }
+
+// ── Article Photos Extraction Helper ────────────────────────────
+export interface ArticlePhoto {
+  id: string;
+  img: string;
+  url?: string;
+  text?: string;
+  caption?: string;
+  height?: number;
+}
+
+export function extractArticlePhotos(article: Article): ArticlePhoto[] {
+  const photos: ArticlePhoto[] = [];
+  const seenUrls = new Set<string>();
+
+  function addPhoto(src: string, caption?: string) {
+    if (!src) return;
+    const url = getWixImageUrl(src);
+    if (!url || url.includes('/images/logo.png') || seenUrls.has(url)) return;
+    seenUrls.add(url);
+    photos.push({
+      id: `photo-${photos.length + 1}`,
+      img: url,
+      url: url,
+      text: caption || `Photo ${photos.length + 1}`,
+      caption,
+      height: 350 + ((photos.length * 17) % 300),
+    });
+  }
+
+  const body = article.body;
+  if (body) {
+    if (typeof body === 'string') {
+      const imgMatches = Array.from(body.matchAll(/<img[^>]+src=["']([^"']+)["']/gi));
+      for (const match of imgMatches) {
+        if (match[1]) addPhoto(match[1]);
+      }
+    } else if (body && Array.isArray(body.nodes)) {
+      function walkNodes(nodes: any[]) {
+        for (const node of nodes) {
+          if (node.type === 'IMAGE') {
+            const src = node.imageData?.image?.src?.url ?? node.imageData?.src?.url;
+            const caption = node.imageData?.caption;
+            if (src) addPhoto(src, caption);
+          } else if (node.type === 'GALLERY') {
+            const items = node.galleryData?.items ?? [];
+            for (const item of items) {
+              const src = item.image?.media?.src?.url ?? item.image?.src?.url;
+              const caption = item.title ?? item.caption;
+              if (src) addPhoto(src, caption);
+            }
+          }
+          if (Array.isArray(node.nodes)) {
+            walkNodes(node.nodes);
+          }
+        }
+      }
+      walkNodes(body.nodes);
+    }
+  }
+
+  return photos;
+}
+

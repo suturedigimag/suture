@@ -1,0 +1,157 @@
+---
+/**
+ * ArticleGallery.astro — Dynamic photo display component for articles
+ *
+ * Rules:
+ *   - 0 photos: Hides photo section completely (Fallback)
+ *   - 1 to 3 photos (<= 3): Standard responsive grid listing
+ *   - 4 to 10 photos (4 - 10): React Bits <Masonry /> component
+ *   - > 10 photos: React Bits <CircularGallery /> component (WebGL, no wiggle)
+ *   - Beyond The Books section: Always uses clean standard listing layout
+ */
+import type { ArticlePhoto } from '../lib/cms';
+import Masonry from './react/Masonry.jsx';
+import CircularGallery from './react/CircularGallery.jsx';
+
+interface Props {
+  photos: ArticlePhoto[];
+  isBeyondBooks?: boolean;
+}
+
+const { photos = [], isBeyondBooks = false } = Astro.props;
+const photoCount = photos.length;
+
+// Map photos for Masonry component: { id, img, url, height }
+const masonryItems = photos.map((p, idx) => ({
+  id: p.id || `photo-${idx}`,
+  img: p.img,
+  url: p.url || '#',
+  height: p.height || 400,
+}));
+
+// Map photos for CircularGallery component: { image, text }
+const circularItems = photos.map((p, idx) => ({
+  image: p.img,
+  text: p.caption || p.text || `Photo ${idx + 1}`,
+}));
+---
+
+{photoCount > 0 && (
+  <section class="article-gallery-container" aria-label="Article photo gallery">
+    <div class="gallery-header">
+      <span class="eyebrow">Gallery</span>
+      <h3 class="gallery-title">{photoCount} {photoCount === 1 ? 'Photograph' : 'Photographs'}</h3>
+    </div>
+
+    <!-- Mode 1: Beyond The Books OR <= 3 photos: Standard Grid -->
+    {(isBeyondBooks || photoCount <= 3) && (
+      <div class={`standard-grid grid-cols-${Math.min(photoCount, 3)}`}>
+        {photos.map((p) => (
+          <div class="grid-item">
+            <img src={p.img} alt={p.caption || 'Article photo'} loading="lazy" decoding="async" />
+            {p.caption && <span class="grid-caption">{p.caption}</span>}
+          </div>
+        ))}
+      </div>
+    )}
+
+    <!-- Mode 2: 4 to 10 photos: React Bits Masonry -->
+    {!isBeyondBooks && photoCount >= 4 && photoCount <= 10 && (
+      <div class="masonry-wrapper">
+        <Masonry
+          items={masonryItems}
+          ease="power3.out"
+          duration={0.6}
+          stagger={0.05}
+          animateFrom="bottom"
+          scaleOnHover={true}
+          hoverScale={0.97}
+          blurToFocus={true}
+          colorShiftOnHover={false}
+          client:only="react"
+        />
+      </div>
+    )}
+
+    <!-- Mode 3: > 10 photos: React Bits CircularGallery (No Wiggle) -->
+    {!isBeyondBooks && photoCount > 10 && (
+      <div class="circular-wrapper">
+        <CircularGallery
+          items={circularItems}
+          bend={2.5}
+          textColor="#1A1A18"
+          borderRadius={0.04}
+          scrollSpeed={2}
+          scrollEase={0.05}
+          client:only="react"
+        />
+      </div>
+    )}
+  </section>
+)}
+
+<style>
+  .article-gallery-container {
+    margin-block: var(--space-10);
+    width: 100%;
+  }
+
+  .gallery-header {
+    margin-bottom: var(--space-4);
+  }
+
+  .gallery-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-top: 2px;
+  }
+
+  /* Standard Grid Styling (<= 3 photos or Beyond The Books) */
+  .standard-grid {
+    display: grid;
+    gap: var(--space-4);
+    width: 100%;
+  }
+
+  .grid-cols-1 { grid-template-columns: 1fr; }
+  .grid-cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid-cols-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+
+  .grid-item {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface-hover);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .grid-item img {
+    width: 100%;
+    height: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+
+  .grid-item:hover img {
+    transform: scale(1.03);
+  }
+
+  .grid-caption {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+  }
+
+  .masonry-wrapper,
+  .circular-wrapper {
+    width: 100%;
+    position: relative;
+  }
+</style>

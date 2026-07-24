@@ -22,6 +22,7 @@ const { author, authorPhoto, date } = Astro.props;
         decoding="async"
         width="40"
         height="40"
+        onerror="this.style.display='none'"
       />
     )}
     <div class="author-block__text">

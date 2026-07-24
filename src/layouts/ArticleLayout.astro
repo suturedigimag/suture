@@ -6,9 +6,10 @@
 import Base from './Base.astro';
 import Nav from '../components/Nav.astro';
 import AuthorBlock from '../components/AuthorBlock.astro';
+import ArticleGallery from '../components/ArticleGallery.astro';
 import Footer from '../components/Footer.astro';
 import type { Article } from '../lib/cms';
-import { getArticleUrl } from '../lib/cms';
+import { getArticleUrl, extractArticlePhotos } from '../lib/cms';
 
 interface Props {
   article: Article;
@@ -24,6 +25,10 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
   month: 'long',
   year: 'numeric',
 }).format(new Date(article._createdDate));
+
+const photos = extractArticlePhotos(article);
+const isBeyondBooks = sectionHref?.includes('/beyond-the-books') ?? false;
+const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.includes('/images/logo.png'));
 ---
 
 <Base
@@ -34,10 +39,10 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
   <Nav />
 
   <main id="main-content">
-    <article class={`article-page ${!article.coverImage ? 'article-page--no-cover' : ''}`}>
+    <article class={`article-page ${!hasRealCoverImage ? 'article-page--no-cover' : ''}`}>
 
-      <!-- Hero cover -->
-      {article.coverImage && (
+      <!-- Hero cover (Hidden as fallback if no real cover photo is provided) -->
+      {hasRealCoverImage && (
         <div class="article-cover">
           <img
             src={article.coverImage}
@@ -45,6 +50,7 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
             class="article-cover__img"
             loading="eager"
             decoding="async"
+            onerror="this.parentElement.style.display='none'"
           />
           <div class="article-cover__gradient"></div>
         </div>
@@ -82,12 +88,20 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
           <slot />
         </div>
 
+        <!-- Interactive Article Photo Gallery -->
+        <ArticleGallery photos={photos} isBeyondBooks={isBeyondBooks} />
+
         <!-- Author Signature Block -->
         {article.author && (
           <div class="article-signature" data-reveal>
             <div class="article-signature__header">
               {article.authorPhoto && (
-                <img src={article.authorPhoto} alt={article.author} class="article-signature__photo" />
+                <img
+                  src={article.authorPhoto}
+                  alt={article.author}
+                  class="article-signature__photo"
+                  onerror="this.style.display='none'"
+                />
               )}
               <div class="article-signature__meta">
                 <span class="article-signature__label">Written By</span>
