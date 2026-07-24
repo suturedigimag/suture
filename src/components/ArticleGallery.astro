@@ -39,8 +39,13 @@ const circularItems = photos.map((p, idx) => ({
 {photoCount > 0 && (
   <section class="article-gallery-container" aria-label="Article photo gallery">
     <div class="gallery-header">
-      <span class="eyebrow">Gallery</span>
-      <h3 class="gallery-title">{photoCount} {photoCount === 1 ? 'Photograph' : 'Photographs'}</h3>
+      <div>
+        <span class="eyebrow">Gallery</span>
+        <h3 class="gallery-title">{photoCount} {photoCount === 1 ? 'Photograph' : 'Photographs'}</h3>
+      </div>
+      <button type="button" class="gallery-action-btn" id="open-circular-gallery">
+        <span>View 3D Gallery</span>
+      </button>
     </div>
 
     <!-- Mode 1: Beyond The Books OR <= 3 photos: Standard Grid -->
@@ -73,7 +78,7 @@ const circularItems = photos.map((p, idx) => ({
       </div>
     )}
 
-    <!-- Mode 3: > 10 photos: React Bits CircularGallery (No Wiggle) -->
+    <!-- Mode 3: > 10 photos: React Bits CircularGallery inline -->
     {!isBeyondBooks && photoCount > 10 && (
       <div class="circular-wrapper">
         <CircularGallery
@@ -87,8 +92,84 @@ const circularItems = photos.map((p, idx) => ({
         />
       </div>
     )}
+
+    <!-- Full-Screen Interactive 3D Circular Gallery Modal -->
+    <div class="circular-modal-overlay" id="circular-modal" role="dialog" aria-modal="true" aria-hidden="true">
+      <button type="button" class="circular-modal-close" id="circular-modal-close" aria-label="Close 3D Gallery">&times;</button>
+      <div class="circular-modal-body">
+        <CircularGallery
+          items={circularItems}
+          bend={2.5}
+          textColor="#FFFFFF"
+          borderRadius={0.04}
+          scrollSpeed={2}
+          scrollEase={0.05}
+          client:only="react"
+        />
+      </div>
+    </div>
   </section>
 )}
+
+<script>
+  function initCircularModal() {
+    const modal = document.getElementById('circular-modal');
+    const closeBtn = document.getElementById('circular-modal-close');
+
+    if (!modal) return;
+
+    const openModal = () => {
+      modal.classList.add('circular-modal-overlay--open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      // Trigger resize for OGL WebGL canvas calculation inside modal
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 60);
+    };
+
+    const closeModal = () => {
+      modal.classList.remove('circular-modal-overlay--open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    };
+
+    closeBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || (e.target as HTMLElement).classList.contains('circular-modal-close')) {
+        closeModal();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Attach click handler to photos and 3D gallery button
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+
+      const trigger = target.closest('#open-circular-gallery') || target.closest('.item-wrapper') || target.closest('.grid-item');
+      if (trigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCircularModal);
+  } else {
+    initCircularModal();
+  }
+</script>
 
 <style>
   .article-gallery-container {
@@ -97,7 +178,10 @@ const circularItems = photos.map((p, idx) => ({
   }
 
   .gallery-header {
-    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
   }
 
   .gallery-title {
@@ -106,6 +190,28 @@ const circularItems = photos.map((p, idx) => ({
     font-weight: 700;
     color: var(--color-text-primary);
     margin-top: 2px;
+  }
+
+  .gallery-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--color-brand);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+  }
+
+  .gallery-action-btn:hover {
+    background: var(--color-brand);
+    color: #ffffff;
+    border-color: var(--color-brand);
   }
 
   /* Standard Grid Styling (<= 3 photos or Beyond The Books) */
@@ -125,6 +231,7 @@ const circularItems = photos.map((p, idx) => ({
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: var(--shadow-sm);
+    cursor: pointer;
   }
 
   .grid-item img {
@@ -152,6 +259,57 @@ const circularItems = photos.map((p, idx) => ({
   .masonry-wrapper,
   .circular-wrapper {
     width: 100%;
+    position: relative;
+  }
+
+  /* Circular Gallery Modal Overlay */
+  .circular-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(10, 10, 8, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-normal) var(--ease-in-out), visibility var(--dur-normal);
+  }
+
+  .circular-modal-overlay--open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .circular-modal-close {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-6);
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 2.2rem;
+    line-height: 1;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    z-index: 100000;
+    transition: background var(--dur-fast);
+  }
+
+  .circular-modal-close:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .circular-modal-body {
+    width: 100vw;
+    height: 100vh;
     position: relative;
   }
 </style>

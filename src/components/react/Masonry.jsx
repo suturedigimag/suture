@@ -66,7 +66,8 @@ const Masonry = ({
   scaleOnHover = true,
   hoverScale = 0.95,
   blurToFocus = true,
-  colorShiftOnHover = false
+  colorShiftOnHover = false,
+  onItemClick
 }) => {
   const mediaQueries = useMemo(
     () => ['(min-width:1200px)', '(min-width:900px)', '(min-width:600px)', '(min-width:400px)'],
@@ -236,9 +237,11 @@ const Masonry = ({
             key={item.id}
             data-key={item.id}
             className="item-wrapper"
-            onClick={() => {
-              if (item.url && item.url !== '#') {
-                window.open(item.url, '_blank', 'noopener');
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onItemClick) {
+                onItemClick(item);
               }
             }}
             onMouseEnter={e => handleMouseEnter(e, item)}
