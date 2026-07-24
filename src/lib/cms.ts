@@ -46,6 +46,10 @@ export const COLLECTION_IDS = {
 
   // About Us
   aboutUs:               'AboutUs',
+
+  // Events
+  events:                'Events',
+  eventsAlt:             'Event',
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTION_IDS;
@@ -79,7 +83,8 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs = 8000): Promise<T>
   });
 }
 
-function slugify(text: string): string {
+function slugify(text?: string | null): string {
+  if (!text) return '';
   return text
     .toString()
     .toLowerCase()
@@ -196,7 +201,7 @@ export async function getAllArticleSlugs(
  */
 export async function getMostRecentArticle(): Promise<Article | null> {
   const allCollections = Object.entries(COLLECTION_IDS).filter(
-    ([key]) => key !== 'aboutUs',
+    ([key]) => key !== 'aboutUs' && key !== 'events' && key !== 'eventsAlt',
   );
 
   const fetches = allCollections.map(async ([, id]) => {
@@ -768,4 +773,139 @@ export function extractArticlePhotos(article: Article): ArticlePhoto[] {
 
   return photos;
 }
+
+// Helper to extract plain text from Wix Rich Content JSON object or HTML string
+export function extractTextFromRichContent(body: any): string {
+  if (!body) return '';
+  let doc = body;
+  if (typeof body === 'string') {
+    const trimmed = body.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        doc = JSON.parse(trimmed);
+      } catch {
+        return body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+    } else {
+      return body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+  }
+
+  const parts: string[] = [];
+  if (doc && Array.isArray(doc.nodes)) {
+    function walk(nodes: any[]) {
+      for (const node of nodes) {
+        if (node.type === 'TEXT' && node.textData?.text) {
+          parts.push(node.textData.text);
+        }
+        if (Array.isArray(node.nodes)) {
+          walk(node.nodes);
+        }
+      }
+    }
+    walk(doc.nodes);
+  }
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// ── Events Data Helper ───────────────────────────────────────────
+export interface EventItem {
+  id: string;
+  day: string;
+  month: string;
+  badge: string;
+  title: string;
+  description: string;
+  time: string;
+  location: string;
+  href: string;
+  coverImage?: string;
+  author?: string;
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export async function getEvents(limit = 6): Promise<EventItem[]> {
+  try {
+    let rawItems: any[] = [];
+    
+    // Candidate collection IDs created in Wix CMS
+    const eventCollectionCandidates = ['Events', 'Event', 'LitclubEvents', 'CampusEvents', 'LitClubEvents', 'UpcomingEvents'];
+
+    for (const colId of eventCollectionCandidates) {
+      try {
+        const response = (await withTimeout(
+          wixClient.items.query(colId).limit(limit).descending('_createdDate').find(),
+          4000
+        )) as any;
+        if (response?.items?.length) {
+          rawItems = response.items;
+          break;
+        }
+      } catch {
+        // Silent catch for collection ID trial
+      }
+    }
+
+    // Fallback to Campus Chronicles collections if no dedicated Event collection returned items
+    if (rawItems.length === 0) {
+      const [clubs, cultural, sports] = await Promise.all([
+        getArticles(COLLECTION_IDS.clubs, 3),
+        getArticles(COLLECTION_IDS.cultural, 3),
+        getArticles(COLLECTION_IDS.sports, 3),
+      ]);
+      rawItems = [...cultural, ...clubs, ...sports].sort(
+        (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+      ).slice(0, limit);
+    }
+
+    return rawItems.map((item) => {
+      const data = item.data ? { ...item, ...item.data } : item;
+      const rawDate = data.eventDate || data.date || item._createdDate || Date.now();
+      const dateObj = new Date(rawDate);
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = MONTH_NAMES[dateObj.getMonth()] || 'Jul';
+
+      const title = data.title || data.eventName || 'Upcoming Event';
+      
+      let badge = data.badge || data.category || data.type;
+      if (!badge) {
+        if (title.toLowerCase().includes('debate')) badge = 'Debate';
+        else if (title.toLowerCase().includes('poetry')) badge = 'Poetry Slam';
+        else if (title.toLowerCase().includes('workshop')) badge = 'Workshop';
+        else if (title.toLowerCase().includes('symposium')) badge = 'Symposium';
+        else badge = 'Event';
+      }
+
+      let extractedText = extractTextFromRichContent(data.description || data.body || data.longDescription || data.summary);
+      if (!extractedText) {
+        extractedText = title;
+      }
+
+      let description = extractedText;
+      if (description.length > 150) {
+        description = description.substring(0, 147) + '...';
+      }
+
+      return {
+        id: item._id || Math.random().toString(),
+        day,
+        month,
+        badge,
+        title,
+        description: description || 'Join us for an exciting event at PSGIMSR.',
+        time: data.time || (data.author ? `By ${data.author}` : '5:00 PM'),
+        location: data.location || data.venue || 'PSGIMSR Campus',
+        href: '', // Non-clickable, does not lead anywhere
+        coverImage: data.coverImage ? getWixImageUrl(data.coverImage) : undefined,
+        author: data.author,
+      };
+    });
+  } catch (err) {
+    console.warn('[CMS] Error fetching events:', err);
+    return [];
+  }
+}
+
+
 

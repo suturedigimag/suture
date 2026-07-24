@@ -239,10 +239,10 @@ const Masonry = ({
             className="item-wrapper"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation();
               if (onItemClick) {
                 onItemClick(item);
               }
+              window.dispatchEvent(new CustomEvent('open-photo-modal', { detail: item }));
             }}
             onMouseEnter={e => handleMouseEnter(e, item)}
             onMouseLeave={e => handleMouseLeave(e, item)}

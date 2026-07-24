@@ -299,6 +299,7 @@ class Media {
     this.plane.setParent(this.scene);
   }
   createTitle() {
+    if (this.textColor === 'transparent') return;
     if (this.text) {
       this.title = new Title({
         gl: this.gl,

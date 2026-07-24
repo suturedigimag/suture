@@ -114,15 +114,6 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
 
       </div>
 
-      <!-- Full Screen Image Lightbox Modal -->
-      <div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" aria-hidden="true">
-        <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close photo viewer">&times;</button>
-        <div class="lightbox-content">
-          <img id="lightbox-img" src="" alt="Full screen photo" />
-          <p id="lightbox-caption" class="lightbox-caption"></p>
-        </div>
-      </div>
-
       <!-- Related articles -->
       {relatedArticles.length > 0 && (
         <section class="article-related section-py">
@@ -155,7 +146,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   <Footer />
 </Base>
 
-<!-- Reading progress bar & Lightbox Modal handlers -->
+<!-- Reading progress bar & Photo click overlay dispatcher -->
 <script>
   // Reading progress bar activation
   const bar = document.getElementById('reading-progress');
@@ -174,53 +165,16 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     update();
   }
 
-  // Lightbox Modal controllers
-  const modal = document.getElementById('image-lightbox');
-  const closeBtn = document.getElementById('lightbox-close');
-  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
-  const lightboxCaption = document.getElementById('lightbox-caption');
-
-  const openLightbox = (src: string, caption = '') => {
-    if (!modal || !lightboxImg || !src) return;
-    lightboxImg.src = src;
-    if (lightboxCaption) lightboxCaption.textContent = caption;
-    modal.classList.add('image-lightbox--open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-  };
-
-  const closeLightbox = () => {
-    if (!modal) return;
-    modal.classList.remove('image-lightbox--open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  };
-
-  closeBtn?.addEventListener('click', closeLightbox);
-  modal?.addEventListener('click', (e) => {
-    if (e.target === modal) closeLightbox();
-  });
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeLightbox();
-  });
-
-  // Attach Lightbox click listener to all article images (including Masonry gallery items)
+  // Attach click listener to article images to trigger 3D Circular Gallery Modal
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     if (!target) return;
     
-    // Check if clicked element is an image or masonry item-img
     if (target.tagName === 'IMG' && (target.closest('.article-body') || target.classList.contains('article-cover__img'))) {
-      const img = target as HTMLImageElement;
-      const src = img.getAttribute('data-lightbox-src') || img.src;
-      const caption = img.getAttribute('data-caption') || img.alt || '';
-      openLightbox(src, caption);
-    } else {
-      const itemImg = target.closest('.item-img') as HTMLElement;
-      if (itemImg && itemImg.style.backgroundImage) {
-        const bgUrl = itemImg.style.backgroundImage.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
-        if (bgUrl) openLightbox(bgUrl, '');
-      }
+      // Ignore click on related articles
+      if (target.closest('.article-related')) return;
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('open-photo-modal'));
     }
   });
 </script>

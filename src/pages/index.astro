@@ -6,9 +6,12 @@
  * This is the parent site. The Suture lives at /suture/suture.
  */
 import '../styles/global.css';
+import { getEvents } from '../lib/cms';
 
 const title = 'PSG Lit Club | Coimbatore';
 const description = "It's PSGIMSR's very own Literature and Arts club!";
+
+const events = await getEvents(6);
 ---
 
 <!doctype html>
@@ -217,58 +220,27 @@ const description = "It's PSGIMSR's very own Literature and Arts club!";
     <section class="lc-events section-py" id="events" aria-labelledby="events-heading">
       <div class="container">
         <div class="lc-events__header" data-reveal>
-          <p class="eyebrow">Upcoming</p>
+          <p class="eyebrow">Upcoming & Recent</p>
           <h2 class="lc-events__title" id="events-heading">Events</h2>
         </div>
         
         <div class="lc-events__grid">
-          <!-- Event 1 -->
-          <div class="lc-event-card" data-reveal data-delay="100">
-            <div class="lc-event-card__date">
-              <span class="lc-event-card__day">18</span>
-              <span class="lc-event-card__month">Sep</span>
-            </div>
-            <div class="lc-event-card__content">
-              <span class="lc-event-card__badge">Symposium</span>
-              <h3 class="lc-event-card__title">Annual Poetry Slam</h3>
-              <p class="lc-event-card__desc">A college-wide poetry slam where words bleed. Bring your original verses and perform in front of a live audience.</p>
-              <div class="lc-event-card__meta">
-                <span>🕒 5:00 PM</span> · <span>📍 Main Auditorium</span>
+          {events.map((event, idx) => (
+            <div class="lc-event-card" data-reveal data-delay={(idx + 1) * 100} style="display: flex;">
+              <div class="lc-event-card__date">
+                <span class="lc-event-card__day">{event.day}</span>
+                <span class="lc-event-card__month">{event.month}</span>
+              </div>
+              <div class="lc-event-card__content">
+                <span class="lc-event-card__badge">{event.badge}</span>
+                <h3 class="lc-event-card__title">{event.title}</h3>
+                <p class="lc-event-card__desc">{event.description}</p>
+                <div class="lc-event-card__meta">
+                  <span>🕒 {event.time}</span> · <span>📍 {event.location}</span>
+                </div>
               </div>
             </div>
-          </div>
-
-          <!-- Event 2 -->
-          <div class="lc-event-card" data-reveal data-delay="200">
-            <div class="lc-event-card__date">
-              <span class="lc-event-card__day">05</span>
-              <span class="lc-event-card__month">Oct</span>
-            </div>
-            <div class="lc-event-card__content">
-              <span class="lc-event-card__badge">Workshop</span>
-              <h3 class="lc-event-card__title">The Pulse of Prose</h3>
-              <p class="lc-event-card__desc">A masterclass in medical humanities and creative journaling. Explore how narrative shapes clinical empathy.</p>
-              <div class="lc-event-card__meta">
-                <span>🕒 3:30 PM</span> · <span>📍 Seminar Hall B</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Event 3 -->
-          <div class="lc-event-card" data-reveal data-delay="300">
-            <div class="lc-event-card__date">
-              <span class="lc-event-card__day">24</span>
-              <span class="lc-event-card__month">Oct</span>
-            </div>
-            <div class="lc-event-card__content">
-              <span class="lc-event-card__badge">Panel</span>
-              <h3 class="lc-event-card__title">Narrative Medicine</h3>
-              <p class="lc-event-card__desc">Exploring the intersection of storytelling and patient care with guest speakers from clinical and literary fields.</p>
-              <div class="lc-event-card__meta">
-                <span>🕒 4:00 PM</span> · <span>📍 Academic Block</span>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

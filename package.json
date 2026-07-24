@@ -16,6 +16,7 @@
     "@astrojs/react": "^6.0.1",
     "@astrojs/vercel": "^11.0.3",
     "@types/animejs": "^3.1.13",
+    "@use-gesture/react": "^10.3.1",
     "@wix/data": "^1.0.486",
     "@wix/members": "^1.0.488",
     "@wix/sdk": "^1.21.13",
