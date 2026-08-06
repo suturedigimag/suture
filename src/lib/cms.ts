@@ -590,8 +590,32 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
       }
 
       case 'GALLERY': {
-        // Handled cleanly by ArticleGallery component in ArticleLayout
-        return '';
+        const items = node.galleryData?.items ?? node.items ?? [];
+        if (!Array.isArray(items) || items.length === 0) return '';
+
+        const cols = Math.min(Math.max(items.length, 1), 3);
+        const renderedItems = items
+          .map((item: any) => {
+            const rawSrc =
+              item.image?.media?.src?.url ??
+              item.image?.src?.url ??
+              item.media?.src?.url ??
+              item.src?.url ??
+              item.url ??
+              '';
+            if (!rawSrc) return '';
+            const imgUrl = getWixImageUrl(rawSrc);
+            const caption = item.title ?? item.caption ?? item.altText ?? '';
+            const figCaption = caption
+              ? `<figcaption class="article-gallery-grid__caption">${escapeHtml(caption)}</figcaption>`
+              : '';
+            return `<figure class="article-gallery-grid__item"><img src="${imgUrl}" alt="${escapeHtml(caption)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
+          })
+          .filter(Boolean)
+          .join('');
+
+        if (!renderedItems) return '';
+        return `<div class="article-gallery-grid cols-${cols}">${renderedItems}</div>`;
       }
 
       case 'BULLETED_LIST': {
