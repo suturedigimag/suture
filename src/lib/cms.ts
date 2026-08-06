@@ -627,25 +627,31 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
           imageStyle += `aspect-ratio: ${targetRatio}; `;
         }
 
-        const parsedItems = items
-          .map((item: any, idx: number) => {
-            const rawSrc =
-              item.image?.media?.src?.url ??
-              item.image?.src?.url ??
-              item.media?.src?.url ??
-              item.src?.url ??
-              item.url ??
-              '';
-            if (!rawSrc) return null;
-            const imgUrl = getWixImageUrl(rawSrc);
-            const caption = item.title ?? item.caption ?? item.altText ?? '';
-            const width = item.image?.media?.width ?? 1200;
-            const height = item.image?.media?.height ?? 800;
-            return { imgUrl, caption, width, height, idx };
-          })
-          .filter(Boolean);
+        const validItems = items.filter((item: any) => {
+          const rawSrc =
+            item.image?.media?.src?.url ??
+            item.image?.src?.url ??
+            item.media?.src?.url ??
+            item.src?.url ??
+            item.url;
+          return Boolean(rawSrc);
+        });
 
-        if (parsedItems.length === 0) return '';
+        if (validItems.length === 0) return '';
+
+        const parsedItems = validItems.map((item: any, idx: number) => {
+          const rawSrc =
+            item.image?.media?.src?.url ??
+            item.image?.src?.url ??
+            item.media?.src?.url ??
+            item.src?.url ??
+            item.url;
+          const imgUrl = getWixImageUrl(rawSrc);
+          const caption = item.title ?? item.caption ?? item.altText ?? '';
+          const width = item.image?.media?.width ?? 1200;
+          const height = item.image?.media?.height ?? 800;
+          return { imgUrl, caption, width, height, idx };
+        });
 
         const alignClass = alignment === 'full_width' ? 'gallery-full-width' : '';
 
