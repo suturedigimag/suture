@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 /**
  * Beyond The Books sub-collection page — /suture/beyond-the-books/[sub]
  */
@@ -6,19 +8,11 @@ import PageLayout from '../../../layouts/PageLayout.astro';
 import EditorialCard from '../../../components/EditorialCard.astro';
 import { getArticles, BOOKS_ROUTE_MAP, COLLECTION_NAMES } from '../../../lib/cms';
 
-export async function getStaticPaths() {
-  return Object.entries(BOOKS_ROUTE_MAP).map(([slug, collectionId]) => ({
-    params: { sub: slug },
-    props: { collectionId, sectionName: COLLECTION_NAMES[slug] ?? slug },
-  }));
-}
+const { sub } = Astro.params as { sub: string };
+const collectionId = BOOKS_ROUTE_MAP[sub];
+if (!collectionId) return Astro.redirect('/suture/beyond-the-books');
 
-interface Props {
-  collectionId: string;
-  sectionName: string;
-}
-
-const { collectionId, sectionName } = Astro.props;
+const sectionName = COLLECTION_NAMES[sub] ?? sub;
 const articles = await getArticles(collectionId, 24);
 ---
 

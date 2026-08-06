@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 /**
  * Literature Club — Main Homepage (Root Index)
  * Route: /suture/ (or root under base path /suture)
@@ -6,13 +8,15 @@
  * This is the parent site. The Suture lives at /suture/suture.
  */
 import '../styles/global.css';
-import { getEvents } from '../lib/cms';
+import { getEvents, getAboutMembers } from '../lib/cms';
 
 const title = 'PSG Lit Club | Coimbatore';
 const description = "It's PSGIMSR's very own Literature and Arts club!";
 
-const events = await getEvents(6);
----
+const [events, teamMembers] = await Promise.all([
+  getEvents(6),
+  getAboutMembers(),
+]);
 
 <!doctype html>
 <html lang="en">
@@ -244,6 +248,40 @@ const events = await getEvents(6);
         </div>
       </div>
     </section>
+
+    <!-- ── Team / Board ───────────────────────────────────────────── -->
+    {teamMembers.length > 0 && (
+      <section class="lc-team section-py" id="team" aria-labelledby="team-heading" style="background: var(--color-surface-hover); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+        <div class="container">
+          <div class="lc-events__header" data-reveal style="text-align: center; margin-bottom: var(--space-10);">
+            <p class="eyebrow">The Leadership</p>
+            <h2 class="lc-events__title" id="team-heading">Our Board & Team</h2>
+            <p style="color: var(--color-text-secondary); max-width: 500px; margin: var(--space-2) auto 0; font-size: var(--fs-sm);">The minds driving Literature Club and The Suture.</p>
+          </div>
+
+          <div class="lc-team__grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6);">
+            {teamMembers.map((member, idx) => (
+              <div class="lc-team-card" data-reveal data-delay={(idx + 1) * 80} style="background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column;">
+                {member.photo && (
+                  <div style="width: 100%; aspect-ratio: 1; overflow: hidden; background: var(--color-surface-hover); border-bottom: 1px solid var(--color-border);">
+                    <img src={member.photo} alt={member.name} style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" />
+                  </div>
+                )}
+                <div style="padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2);">
+                  <h3 style="font-family: var(--font-serif); font-size: var(--fs-md); font-weight: 700; color: var(--color-text-primary); margin: 0;">{member.name}</h3>
+                  {member.role && (
+                    <p style="font-family: var(--font-sans); font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: var(--ls-wider); color: var(--color-accent); margin: 0;">{member.role}</p>
+                  )}
+                  {member.bio && (
+                    <p style="font-family: var(--font-sans); font-size: var(--fs-sm); color: var(--color-text-secondary); line-height: var(--lh-relaxed); margin: 0;">{member.bio}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
 
 

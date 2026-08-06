@@ -684,12 +684,46 @@ export async function getAboutMembers(): Promise<AboutMember[]> {
     if (response.items && response.items.length > 0) {
       return response.items.map((item: any) => {
         const data = item.data ? { ...item, ...item.data } : item;
-        const rawPhoto = data.profilePicture ?? data.photo?.url ?? data.photo ?? data.image?.url ?? data.image ?? undefined;
+        const rawPhoto =
+          data.profilePicture ??
+          data.photo?.url ??
+          data.photo ??
+          data.image?.url ??
+          data.image ??
+          data.picture ??
+          data.avatar ??
+          undefined;
+
+        const rawBio =
+          data.bio ??
+          data.about ??
+          data.description ??
+          data.details ??
+          data.summary ??
+          data.longDescription ??
+          '';
+        const extractedBio = extractTextFromRichContent(rawBio);
+
+        const name =
+          data.fullName ??
+          data.name ??
+          data.memberName ??
+          data.personName ??
+          data.title ??
+          'Member';
+
+        const role =
+          data.role ??
+          data.position ??
+          data.designation ??
+          data.title ??
+          '';
+
         return {
           _id: item._id,
-          name: data.fullName ?? data.name ?? 'Untitled',
-          role: data.role ?? '',
-          bio: data.bio ?? '',
+          name,
+          role,
+          bio: extractedBio || (typeof rawBio === 'string' ? rawBio : ''),
           photo: rawPhoto ? getWixImageUrl(rawPhoto) : undefined,
         };
       });
@@ -861,14 +895,14 @@ export async function getEvents(limit = 6): Promise<EventItem[]> {
 
     return rawItems.map((item) => {
       const data = item.data ? { ...item, ...item.data } : item;
-      const rawDate = data.eventDate || data.date || item._createdDate || Date.now();
+      const rawDate = data.eventDate || data.date || data.startDate || data.event_date || item._createdDate || Date.now();
       const dateObj = new Date(rawDate);
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const month = MONTH_NAMES[dateObj.getMonth()] || 'Jul';
+      const day = isNaN(dateObj.getDate()) ? '15' : String(dateObj.getDate()).padStart(2, '0');
+      const month = isNaN(dateObj.getMonth()) ? 'Jul' : MONTH_NAMES[dateObj.getMonth()] || 'Jul';
 
-      const title = data.title || data.eventName || 'Upcoming Event';
+      const title = data.topic || data.title || data.eventName || data.name || data.eventTitle || data.subject || data.heading || 'Upcoming Event';
       
-      let badge = data.badge || data.category || data.type;
+      let badge = data.badge || data.category || data.type || data.section;
       if (!badge) {
         if (title.toLowerCase().includes('debate')) badge = 'Debate';
         else if (title.toLowerCase().includes('poetry')) badge = 'Poetry Slam';
@@ -877,7 +911,7 @@ export async function getEvents(limit = 6): Promise<EventItem[]> {
         else badge = 'Event';
       }
 
-      let extractedText = extractTextFromRichContent(data.description || data.body || data.longDescription || data.summary);
+      let extractedText = extractTextFromRichContent(data.description || data.body || data.longDescription || data.summary || data.details);
       if (!extractedText) {
         extractedText = title;
       }
@@ -887,6 +921,8 @@ export async function getEvents(limit = 6): Promise<EventItem[]> {
         description = description.substring(0, 147) + '...';
       }
 
+      const rawCover = data.coverImage?.url || data.coverImage || data.image?.url || data.image || data.eventImage || data.photo;
+
       return {
         id: item._id || Math.random().toString(),
         day,
@@ -894,10 +930,10 @@ export async function getEvents(limit = 6): Promise<EventItem[]> {
         badge,
         title,
         description: description || 'Join us for an exciting event at PSGIMSR.',
-        time: data.time || (data.author ? `By ${data.author}` : '5:00 PM'),
-        location: data.location || data.venue || 'PSGIMSR Campus',
+        time: data.time || data.eventTime || data.timing || (data.author ? `By ${data.author}` : '5:00 PM'),
+        location: data.location || data.venue || data.place || 'PSGIMSR Campus',
         href: '', // Non-clickable, does not lead anywhere
-        coverImage: data.coverImage ? getWixImageUrl(data.coverImage) : undefined,
+        coverImage: rawCover ? getWixImageUrl(rawCover) : undefined,
         author: data.author,
       };
     });

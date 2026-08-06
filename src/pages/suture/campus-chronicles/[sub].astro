@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 /**
  * Campus sub-collection page — /suture/campus-chronicles/[sub]
  * e.g. /suture/campus-chronicles/clubs
@@ -7,19 +9,11 @@ import PageLayout from '../../../layouts/PageLayout.astro';
 import EditorialCard from '../../../components/EditorialCard.astro';
 import { getArticles, CAMPUS_ROUTE_MAP, COLLECTION_NAMES } from '../../../lib/cms';
 
-export async function getStaticPaths() {
-  return Object.entries(CAMPUS_ROUTE_MAP).map(([slug, collectionId]) => ({
-    params: { sub: slug },
-    props: { collectionId, sectionName: COLLECTION_NAMES[slug] ?? slug },
-  }));
-}
+const { sub } = Astro.params as { sub: string };
+const collectionId = CAMPUS_ROUTE_MAP[sub];
+if (!collectionId) return Astro.redirect('/suture/campus-chronicles');
 
-interface Props {
-  collectionId: string;
-  sectionName: string;
-}
-
-const { collectionId, sectionName } = Astro.props;
+const sectionName = COLLECTION_NAMES[sub] ?? sub;
 const articles = await getArticles(collectionId, 24);
 ---
 

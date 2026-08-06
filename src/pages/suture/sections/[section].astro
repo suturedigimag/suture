@@ -5,6 +5,8 @@
  *
  * Static generation: one page per sub-collection in SECTION_ROUTE_MAP
  */
+export const prerender = false;
+
 import PageLayout from '../../../layouts/PageLayout.astro';
 import EditorialCard from '../../../components/EditorialCard.astro';
 import SearchAndFilters from '../../../components/SearchAndFilters.astro';
@@ -15,21 +17,12 @@ import {
   COLLECTION_NAMES,
 } from '../../../lib/cms';
 
-export async function getStaticPaths() {
-  return Object.entries(SECTION_ROUTE_MAP).map(([slug, collectionId]) => ({
-    params: { section: slug },
-    props: { collectionId, sectionName: COLLECTION_NAMES[slug] ?? slug },
-  }));
-}
+const { section } = Astro.params as { section: string };
 
-interface Props {
-  collectionId: string;
-  sectionName: string;
-}
+const collectionId = SECTION_ROUTE_MAP[section];
+if (!collectionId) return Astro.redirect('/suture/sections');
 
-const { collectionId, sectionName } = Astro.props;
-const { section } = Astro.params;
-
+const sectionName = COLLECTION_NAMES[section] ?? section;
 const articles = await getArticles(collectionId, 24);
 ---
 
