@@ -593,9 +593,12 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         const items = node.galleryData?.items ?? node.items ?? [];
         if (!Array.isArray(items) || items.length === 0) return '';
 
-        const cols = Math.min(Math.max(items.length, 1), 3);
-        const renderedItems = items
-          .map((item: any) => {
+        const layoutOptions = node.galleryData?.options?.layout ?? {};
+        const layoutType = (layoutOptions.type ?? 'GRID').toUpperCase();
+        const numColumns = layoutOptions.numberOfColumns ?? Math.min(Math.max(items.length, 1), 3);
+
+        const parsedItems = items
+          .map((item: any, idx: number) => {
             const rawSrc =
               item.image?.media?.src?.url ??
               item.image?.src?.url ??
@@ -603,19 +606,77 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
               item.src?.url ??
               item.url ??
               '';
-            if (!rawSrc) return '';
+            if (!rawSrc) return null;
             const imgUrl = getWixImageUrl(rawSrc);
             const caption = item.title ?? item.caption ?? item.altText ?? '';
-            const figCaption = caption
-              ? `<figcaption class="article-gallery-grid__caption">${escapeHtml(caption)}</figcaption>`
-              : '';
-            return `<figure class="article-gallery-grid__item"><img src="${imgUrl}" alt="${escapeHtml(caption)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
+            const width = item.image?.media?.width ?? 1200;
+            const height = item.image?.media?.height ?? 800;
+            return { imgUrl, caption, width, height, idx };
           })
-          .filter(Boolean)
-          .join('');
+          .filter(Boolean);
 
-        if (!renderedItems) return '';
-        return `<div class="article-gallery-grid cols-${cols}">${renderedItems}</div>`;
+        if (parsedItems.length === 0) return '';
+
+        // Mode 1: Slideshow / Fullsize / Thumbnail / Slider Preset
+        if (layoutType === 'FULLSIZE' || layoutType === 'THUMBNAIL' || layoutType === 'SLIDER' || layoutType === 'SLIDESHOW') {
+          const first = parsedItems[0];
+          const thumbsHtml = parsedItems
+            .map(
+              (p: any, i: number) => `
+            <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-index="${i}" data-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" loading="lazy" />
+            </button>
+          `
+            )
+            .join('');
+
+          return `
+            <div class="article-gallery-fullsize" data-gallery-slideshow>
+              <div class="gallery-main-stage">
+                <img src="${first.imgUrl}" alt="${escapeHtml(first.caption)}" data-lightbox-src="${first.imgUrl}" data-caption="${escapeHtml(first.caption)}" class="gallery-main-img" />
+                <div class="gallery-main-caption">${escapeHtml(first.caption)}</div>
+                ${
+                  parsedItems.length > 1
+                    ? `
+                  <button type="button" class="gallery-nav-btn prev" aria-label="Previous image">‹</button>
+                  <button type="button" class="gallery-nav-btn next" aria-label="Next image">›</button>
+                  <div class="gallery-counter"><span class="current-idx">1</span> / ${parsedItems.length}</div>
+                `
+                    : ''
+                }
+              </div>
+              ${parsedItems.length > 1 ? `<div class="gallery-thumbs-track">${thumbsHtml}</div>` : ''}
+            </div>
+          `;
+        }
+
+        // Mode 2: Masonry Preset
+        if (layoutType === 'MASONRY') {
+          const itemsHtml = parsedItems
+            .map(
+              (p: any) => `
+            <figure class="article-gallery-masonry__item">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="aspect-ratio: ${p.width} / ${p.height};" onerror="this.parentElement.style.display='none'" />
+              ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+            </figure>
+          `
+            )
+            .join('');
+          return `<div class="article-gallery-masonry">${itemsHtml}</div>`;
+        }
+
+        // Mode 3: Grid Preset (Default)
+        const itemsHtml = parsedItems
+          .map(
+            (p: any) => `
+          <figure class="article-gallery-grid__item">
+            <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />
+            ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+          </figure>
+        `
+          )
+          .join('');
+        return `<div class="article-gallery-grid cols-${numColumns}">${itemsHtml}</div>`;
       }
 
       case 'BULLETED_LIST': {

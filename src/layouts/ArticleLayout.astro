@@ -206,8 +206,54 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (!target) return;
+
+      // Handle Slideshow thumbnail click
+      const thumbBtn = target.closest('.gallery-thumb-btn') as HTMLElement | null;
+      if (thumbBtn) {
+        const gallery = thumbBtn.closest('[data-gallery-slideshow]');
+        if (!gallery) return;
+        const mainImg = gallery.querySelector('.gallery-main-img') as HTMLImageElement | null;
+        const mainCaption = gallery.querySelector('.gallery-main-caption');
+        const counter = gallery.querySelector('.current-idx');
+        const allThumbs = gallery.querySelectorAll('.gallery-thumb-btn');
+
+        const src = thumbBtn.getAttribute('data-src') || '';
+        const caption = thumbBtn.getAttribute('data-caption') || '';
+        const index = parseInt(thumbBtn.getAttribute('data-index') || '0', 10);
+
+        if (mainImg && src) {
+          mainImg.src = src;
+          mainImg.setAttribute('data-lightbox-src', src);
+          mainImg.setAttribute('data-caption', caption);
+        }
+        if (mainCaption) mainCaption.textContent = caption;
+        if (counter) counter.textContent = String(index + 1);
+
+        allThumbs.forEach((t) => t.classList.remove('active'));
+        thumbBtn.classList.add('active');
+        return;
+      }
+
+      // Handle Slideshow prev/next navigation
+      const navBtn = target.closest('.gallery-nav-btn') as HTMLElement | null;
+      if (navBtn) {
+        const gallery = navBtn.closest('[data-gallery-slideshow]');
+        if (!gallery) return;
+        const allThumbs = Array.from(gallery.querySelectorAll('.gallery-thumb-btn')) as HTMLElement[];
+        if (!allThumbs.length) return;
+        const activeIdx = allThumbs.findIndex((t) => t.classList.contains('active'));
+        const isNext = navBtn.classList.contains('next');
+        let newIdx = isNext ? activeIdx + 1 : activeIdx - 1;
+        if (newIdx < 0) newIdx = allThumbs.length - 1;
+        if (newIdx >= allThumbs.length) newIdx = 0;
+
+        allThumbs[newIdx]?.click();
+        return;
+      }
+
+      // Handle Image Lightbox click
       if (target.tagName === 'IMG' && (target.closest('.article-body') || target.classList.contains('article-cover__img'))) {
-        if (target.closest('.article-related')) return;
+        if (target.closest('.article-related') || target.classList.contains('gallery-thumb-btn')) return;
         const src = target.getAttribute('data-lightbox-src') || (target as HTMLImageElement).src;
         const caption = target.getAttribute('data-caption') || target.getAttribute('alt') || '';
         if (src && !src.includes('/images/logo.png')) {
@@ -337,7 +383,9 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     font-family: var(--font-sans);
   }
 
-  /* Wix CMS Rich Content GALLERY preset grid layout */
+  /* ── Wix CMS Rich Content Gallery Presets ── */
+
+  /* 1. Grid Preset */
   .article-body :global(.article-gallery-grid) {
     display: grid;
     gap: var(--space-4);
@@ -358,8 +406,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   }
   .article-body :global(.article-gallery-grid__item img) {
     width: 100%;
-    height: 100%;
-    max-height: 520px;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
     display: block;
     margin: 0 !important;
@@ -369,7 +416,143 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   .article-body :global(.article-gallery-grid__item:hover img) {
     transform: scale(1.03);
   }
-  .article-body :global(.article-gallery-grid__caption) {
+
+  /* 2. Fullsize / Slideshow / Thumbnail Preset */
+  .article-body :global(.article-gallery-fullsize) {
+    margin-block: var(--space-8);
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .article-body :global(.gallery-main-stage) {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    max-height: 580px;
+    background: #0d0d0c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .article-body :global(.gallery-main-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    margin: 0 !important;
+    cursor: pointer;
+  }
+  .article-body :global(.gallery-main-caption) {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: var(--space-3) var(--space-5);
+    background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+    color: #ffffff;
+    font-size: var(--fs-xs);
+    font-family: var(--font-sans);
+  }
+  .article-body :global(.gallery-nav-btn) {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.3);
+    font-size: 1.8rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background var(--dur-fast);
+  }
+  .article-body :global(.gallery-nav-btn:hover) { background: rgba(0, 0, 0, 0.9); }
+  .article-body :global(.gallery-nav-btn.prev) { left: var(--space-4); }
+  .article-body :global(.gallery-nav-btn.next) { right: var(--space-4); }
+
+  .article-body :global(.gallery-counter) {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    background: rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    font-size: var(--fs-xs);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-sans);
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .article-body :global(.gallery-thumbs-track) {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    overflow-x: auto;
+    background: var(--color-surface-hover);
+    border-top: 1px solid var(--color-border);
+  }
+  .article-body :global(.gallery-thumb-btn) {
+    width: 72px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 2px solid transparent;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--dur-fast), border-color var(--dur-fast);
+  }
+  .article-body :global(.gallery-thumb-btn.active),
+  .article-body :global(.gallery-thumb-btn:hover) {
+    opacity: 1;
+    border-color: var(--color-brand);
+  }
+  .article-body :global(.gallery-thumb-btn img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: 0 !important;
+  }
+
+  /* 3. Masonry Preset */
+  .article-body :global(.article-gallery-masonry) {
+    column-count: 3;
+    column-gap: var(--space-4);
+    margin-block: var(--space-8);
+  }
+  @media (max-width: 768px) {
+    .article-body :global(.article-gallery-masonry) { column-count: 2; }
+  }
+  .article-body :global(.article-gallery-masonry__item) {
+    break-inside: avoid;
+    margin-bottom: var(--space-4) !important;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface-hover);
+    box-shadow: var(--shadow-sm);
+  }
+  .article-body :global(.article-gallery-masonry__item img) {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 !important;
+    cursor: pointer;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+  .article-body :global(.article-gallery-masonry__item:hover img) {
+    transform: scale(1.03);
+  }
+
+  .article-body :global(.article-gallery-caption) {
     font-size: var(--fs-xs);
     color: var(--color-text-tertiary);
     padding: var(--space-2) var(--space-3);
