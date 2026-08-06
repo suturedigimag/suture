@@ -586,16 +586,46 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         const alt = node.imageData?.altText ?? '';
         const caption = node.imageData?.caption ?? '';
         const figCaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : '';
-        return `<figure class="article-image"><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
+
+        // Custom alignment and sizing properties
+        const alignment = (node.containerData?.alignment ?? node.imageData?.alignment ?? 'CENTER').toLowerCase();
+        const widthSize = node.containerData?.width?.size ?? node.imageData?.displayMode ?? '';
+
+        let alignClass = `align-${alignment}`;
+        if (alignment === 'full_width' || widthSize === 'FULL_WIDTH') alignClass = 'align-full-width';
+        else if (widthSize === 'SMALL') alignClass += ' size-small';
+        else if (widthSize === 'MEDIUM') alignClass += ' size-medium';
+
+        return `<figure class="article-image ${alignClass}"><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
       }
 
       case 'GALLERY': {
         const items = node.galleryData?.items ?? node.items ?? [];
         if (!Array.isArray(items) || items.length === 0) return '';
 
-        const layoutOptions = node.galleryData?.options?.layout ?? {};
+        const options = node.galleryData?.options ?? node.options ?? {};
+        const layoutOptions = options.layout ?? {};
+        const itemOptions = options.item ?? {};
+        const thumbOptions = options.thumbnails ?? {};
+        const containerData = node.containerData ?? {};
+
         const layoutType = (layoutOptions.type ?? 'GRID').toUpperCase();
         const numColumns = layoutOptions.numberOfColumns ?? Math.min(Math.max(items.length, 1), 3);
+        const cropMode = (itemOptions.crop ?? 'FILL').toUpperCase();
+        const targetRatio = itemOptions.ratio;
+        const thumbPlacement = (thumbOptions.placement ?? 'BOTTOM').toUpperCase();
+        const alignment = (containerData.alignment ?? 'CENTER').toLowerCase();
+
+        let imageStyle = '';
+        if (cropMode === 'FIT') {
+          imageStyle += 'object-fit: contain; background: var(--color-surface-hover); ';
+        } else {
+          imageStyle += 'object-fit: cover; ';
+        }
+
+        if (targetRatio && targetRatio > 0) {
+          imageStyle += `aspect-ratio: ${targetRatio}; `;
+        }
 
         const parsedItems = items
           .map((item: any, idx: number) => {
@@ -617,23 +647,28 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
 
         if (parsedItems.length === 0) return '';
 
+        const alignClass = alignment === 'full_width' ? 'gallery-full-width' : '';
+
         // Mode 1: Slideshow / Fullsize / Thumbnail / Slider Preset
         if (layoutType === 'FULLSIZE' || layoutType === 'THUMBNAIL' || layoutType === 'SLIDER' || layoutType === 'SLIDESHOW') {
           const first = parsedItems[0];
-          const thumbsHtml = parsedItems
-            .map(
-              (p: any, i: number) => `
-            <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-index="${i}" data-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}">
-              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" loading="lazy" />
-            </button>
-          `
-            )
-            .join('');
+          const showThumbs = thumbPlacement !== 'NONE' && parsedItems.length > 1;
+          const thumbsHtml = showThumbs
+            ? parsedItems
+                .map(
+                  (p: any, i: number) => `
+              <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-index="${i}" data-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}">
+                <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" loading="lazy" />
+              </button>
+            `
+                )
+                .join('')
+            : '';
 
           return `
-            <div class="article-gallery-fullsize" data-gallery-slideshow>
+            <div class="article-gallery-fullsize ${alignClass}" data-gallery-slideshow>
               <div class="gallery-main-stage">
-                <img src="${first.imgUrl}" alt="${escapeHtml(first.caption)}" data-lightbox-src="${first.imgUrl}" data-caption="${escapeHtml(first.caption)}" class="gallery-main-img" />
+                <img src="${first.imgUrl}" alt="${escapeHtml(first.caption)}" data-lightbox-src="${first.imgUrl}" data-caption="${escapeHtml(first.caption)}" class="gallery-main-img" style="${imageStyle}" />
                 <div class="gallery-main-caption">${escapeHtml(first.caption)}</div>
                 ${
                   parsedItems.length > 1
@@ -645,7 +680,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
                     : ''
                 }
               </div>
-              ${parsedItems.length > 1 ? `<div class="gallery-thumbs-track">${thumbsHtml}</div>` : ''}
+              ${showThumbs ? `<div class="gallery-thumbs-track">${thumbsHtml}</div>` : ''}
             </div>
           `;
         }
@@ -656,13 +691,13 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
             .map(
               (p: any) => `
             <figure class="article-gallery-masonry__item">
-              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="aspect-ratio: ${p.width} / ${p.height};" onerror="this.parentElement.style.display='none'" />
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle ? imageStyle : `aspect-ratio: ${p.width} / ${p.height};`}" onerror="this.parentElement.style.display='none'" />
               ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
             </figure>
           `
             )
             .join('');
-          return `<div class="article-gallery-masonry">${itemsHtml}</div>`;
+          return `<div class="article-gallery-masonry ${alignClass}">${itemsHtml}</div>`;
         }
 
         // Mode 3: Grid Preset (Default)
@@ -670,13 +705,13 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
           .map(
             (p: any) => `
           <figure class="article-gallery-grid__item">
-            <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />
+            <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
             ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
           </figure>
         `
           )
           .join('');
-        return `<div class="article-gallery-grid cols-${numColumns}">${itemsHtml}</div>`;
+        return `<div class="article-gallery-grid cols-${numColumns} ${alignClass}">${itemsHtml}</div>`;
       }
 
       case 'BULLETED_LIST': {

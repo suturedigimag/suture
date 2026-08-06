@@ -383,6 +383,25 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     font-family: var(--font-sans);
   }
 
+  /* Image & Gallery Custom Alignment & Sizing */
+  .article-body :global(.align-center) { text-align: center; margin-inline: auto; }
+  .article-body :global(.align-left) { text-align: left; float: left; margin-right: var(--space-6); max-width: 50%; }
+  .article-body :global(.align-right) { text-align: right; float: right; margin-left: var(--space-6); max-width: 50%; }
+  .article-body :global(.align-full-width),
+  .article-body :global(.gallery-full-width) {
+    width: 100vw !important;
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+    max-width: 100vw !important;
+    padding-inline: var(--gutter) !important;
+  }
+
+  .article-body :global(.size-small img) { max-width: 340px !important; margin-inline: auto; }
+  .article-body :global(.size-medium img) { max-width: 580px !important; margin-inline: auto; }
+
   /* ── Wix CMS Rich Content Gallery Presets ── */
 
   /* 1. Grid Preset */
