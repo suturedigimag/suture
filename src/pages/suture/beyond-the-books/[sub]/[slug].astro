@@ -13,14 +13,11 @@ const { sub, slug } = Astro.params as { sub: string; slug: string };
 const collectionId = BOOKS_ROUTE_MAP[sub];
 if (!collectionId) return Astro.redirect('/suture/beyond-the-books');
 
-const [article, relatedRaw] = await Promise.all([
-  getArticleBySlug(collectionId, slug),
-  getArticles(collectionId, 4),
-]);
-
+const article = await getArticleBySlug(collectionId, slug);
 if (!article) return Astro.redirect('/suture/beyond-the-books/' + sub);
 
-const related = relatedRaw.filter((a) => a.slug !== slug);
+const relatedRaw = await getArticles(collectionId, 4);
+const related = relatedRaw.filter((a) => a.slug !== article.slug);
 const sectionName = COLLECTION_NAMES[sub] ?? sub;
 ---
 

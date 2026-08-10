@@ -170,6 +170,76 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     update();
   }
 
+  // Auto-generate Section Slideshow Navigator at top of article body
+  const articleBody = document.querySelector('.article-body') as HTMLElement | null;
+  if (articleBody) {
+    const sectionTargets = Array.from(articleBody.querySelectorAll('h2, h3, [data-section-divider]')) as HTMLElement[];
+    if (sectionTargets.length > 1) {
+      const slideshowBar = document.createElement('div');
+      slideshowBar.className = 'article-section-slideshow';
+
+      sectionTargets.forEach((el, idx) => {
+        if (!el.id) el.id = `article-section-${idx + 1}`;
+      });
+
+      const getSectionTitle = (el: HTMLElement, idx: number) => {
+        let raw = el.textContent || '';
+        let clean = raw.replace('Previous Section', '').replace('Next Section', '').replace('Article Section', '').trim();
+        return clean || `Section ${idx + 1}`;
+      };
+
+      slideshowBar.innerHTML = `
+        <button type="button" class="section-nav-arrow prev" aria-label="Previous Section" title="Previous Section">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="section-slideshow__info">
+          <span class="section-slideshow__counter">Section <span class="current-sec">1</span> of <span class="total-sec">${sectionTargets.length}</span></span>
+          <span class="section-slideshow__title">${getSectionTitle(sectionTargets[0], 0)}</span>
+        </div>
+        <button type="button" class="section-nav-arrow next" aria-label="Next Section" title="Next Section">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      `;
+
+      articleBody.insertBefore(slideshowBar, articleBody.firstChild);
+
+      let currentSectionIdx = 0;
+      const currentSecEl = slideshowBar.querySelector('.current-sec');
+      const titleEl = slideshowBar.querySelector('.section-slideshow__title');
+      const prevBtn = slideshowBar.querySelector('.section-nav-arrow.prev');
+      const nextBtn = slideshowBar.querySelector('.section-nav-arrow.next');
+
+      const updateSlideshowState = (index: number) => {
+        currentSectionIdx = Math.max(0, Math.min(index, sectionTargets.length - 1));
+        if (currentSecEl) currentSecEl.textContent = String(currentSectionIdx + 1);
+        if (titleEl) titleEl.textContent = getSectionTitle(sectionTargets[currentSectionIdx], currentSectionIdx);
+      };
+
+      const navigateToSection = (index: number) => {
+        updateSlideshowState(index);
+        sectionTargets[currentSectionIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      prevBtn?.addEventListener('click', () => navigateToSection(currentSectionIdx - 1));
+      nextBtn?.addEventListener('click', () => navigateToSection(currentSectionIdx + 1));
+
+      // Scroll Spy using IntersectionObserver to update section slideshow state dynamically
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const idx = sectionTargets.indexOf(entry.target as HTMLElement);
+              if (idx !== -1) updateSlideshowState(idx);
+            }
+          });
+        },
+        { rootMargin: '-10% 0px -70% 0px', threshold: 0 }
+      );
+
+      sectionTargets.forEach((target) => observer.observe(target));
+    }
+  }
+
   // Single Unified Lightbox modal for all article photos & galleries
   const lightbox = document.getElementById('image-lightbox');
   const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
@@ -207,6 +277,72 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
       const target = e.target as HTMLElement;
       if (!target) return;
 
+      // Handle Gallery Slider prev/next track scrolling
+      const sliderBtn = target.closest('.slider-btn') as HTMLElement | null;
+      if (sliderBtn) {
+        const sliderWrap = sliderBtn.closest('[data-gallery-slider]');
+        if (!sliderWrap) return;
+        const track = sliderWrap.querySelector('.article-gallery-slider__track') as HTMLElement | null;
+        if (track) {
+          const scrollAmount = track.clientWidth * 0.75;
+          const isNext = sliderBtn.classList.contains('next');
+          track.scrollBy({
+            left: isNext ? scrollAmount : -scrollAmount,
+            behavior: 'smooth'
+          });
+        }
+        return;
+      }
+
+      // Handle Gallery Panorama prev/next track scrolling
+      const panoramaBtn = target.closest('.panorama-nav-btn') as HTMLElement | null;
+      if (panoramaBtn) {
+        const panoramaWrap = panoramaBtn.closest('[data-gallery-panorama]');
+        if (!panoramaWrap) return;
+        const track = panoramaWrap.querySelector('.panorama-track') as HTMLElement | null;
+        if (track) {
+          const scrollAmount = track.clientWidth * 0.8;
+          const isNext = panoramaBtn.classList.contains('next');
+          track.scrollBy({
+            left: isNext ? scrollAmount : -scrollAmount,
+            behavior: 'smooth'
+          });
+        }
+        return;
+      }
+
+      // Handle Slide to Prev Section divider button click
+      const slidePrevBtn = target.closest('[data-action="slide-prev-section"]') as HTMLElement | null;
+      if (slidePrevBtn) {
+        const currentDivider = slidePrevBtn.closest('[data-section-divider]');
+        if (!currentDivider) return;
+        const allDividers = Array.from(document.querySelectorAll('.article-body [data-section-divider], .article-body h2, .article-body h3'));
+        const currentIdx = allDividers.indexOf(currentDivider as HTMLElement);
+        const prevTarget = allDividers[Math.max(0, currentIdx - 1)] as HTMLElement | undefined;
+        if (prevTarget) {
+          prevTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      // Handle Slide to Next Section divider button click
+      const slideNextBtn = target.closest('[data-action="slide-next-section"]') as HTMLElement | null;
+      if (slideNextBtn) {
+        const currentDivider = slideNextBtn.closest('[data-section-divider]');
+        if (!currentDivider) return;
+        const allDividers = Array.from(document.querySelectorAll('.article-body [data-section-divider], .article-body h2, .article-body h3'));
+        const currentIdx = allDividers.indexOf(currentDivider as HTMLElement);
+        const nextTarget = allDividers[currentIdx + 1] as HTMLElement | undefined;
+
+        if (nextTarget) {
+          nextTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          const signature = document.querySelector('.article-signature') || document.querySelector('.article-related');
+          signature?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
       // Handle Slideshow thumbnail click
       const thumbBtn = target.closest('.gallery-thumb-btn') as HTMLElement | null;
       if (thumbBtn) {
@@ -240,14 +376,19 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
         const gallery = navBtn.closest('[data-gallery-slideshow]');
         if (!gallery) return;
         const allThumbs = Array.from(gallery.querySelectorAll('.gallery-thumb-btn')) as HTMLElement[];
-        if (!allThumbs.length) return;
-        const activeIdx = allThumbs.findIndex((t) => t.classList.contains('active'));
-        const isNext = navBtn.classList.contains('next');
-        let newIdx = isNext ? activeIdx + 1 : activeIdx - 1;
-        if (newIdx < 0) newIdx = allThumbs.length - 1;
-        if (newIdx >= allThumbs.length) newIdx = 0;
+        if (allThumbs.length > 0) {
+          let activeIdx = allThumbs.findIndex((t) => t.classList.contains('active'));
+          if (activeIdx === -1) activeIdx = 0;
+          const isNext = navBtn.classList.contains('next');
+          let newIdx = isNext ? activeIdx + 1 : activeIdx - 1;
+          if (newIdx < 0) newIdx = allThumbs.length - 1;
+          if (newIdx >= allThumbs.length) newIdx = 0;
 
-        allThumbs[newIdx]?.click();
+          const targetThumb = allThumbs[newIdx];
+          if (targetThumb) {
+            targetThumb.click();
+          }
+        }
         return;
       }
 
@@ -364,29 +505,58 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     color: var(--color-text-secondary);
   }
 
-  /* Rich Media Elements */
+  /* Rich Media Elements & Positioning */
   .article-body :global(.article-image) {
     margin-block: var(--space-8);
     text-align: center;
+    clear: both;
+    position: relative;
+    width: 100%;
   }
   .article-body :global(.article-image img) {
     width: 100%;
-    max-height: 600px;
+    max-height: 620px;
     object-fit: cover;
     border-radius: var(--radius-md);
-    margin: 0;
+    margin: 0 auto;
+    display: block;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+  .article-body :global(.article-image img:hover) {
+    transform: scale(1.015);
   }
   .article-body :global(.article-image figcaption) {
     font-size: var(--fs-xs);
     color: var(--color-text-tertiary);
-    margin-top: var(--space-2);
+    margin-top: var(--space-3);
     font-family: var(--font-sans);
+    font-style: italic;
   }
 
-  /* Image & Gallery Custom Alignment & Sizing */
-  .article-body :global(.align-center) { text-align: center; margin-inline: auto; }
-  .article-body :global(.align-left) { text-align: left; float: left; margin-right: var(--space-6); max-width: 50%; }
-  .article-body :global(.align-right) { text-align: right; float: right; margin-left: var(--space-6); max-width: 50%; }
+  /* Image & Gallery Alignment & Sizing */
+  .article-body :global(.align-center) { text-align: center; margin-inline: auto; clear: both; }
+  .article-body :global(.align-left) {
+    float: left;
+    margin-right: var(--space-6);
+    margin-bottom: var(--space-4);
+    max-width: 48%;
+  }
+  .article-body :global(.align-right) {
+    float: right;
+    margin-left: var(--space-6);
+    margin-bottom: var(--space-4);
+    max-width: 48%;
+  }
+  @media (max-width: 640px) {
+    .article-body :global(.align-left),
+    .article-body :global(.align-right) {
+      float: none !important;
+      max-width: 100% !important;
+      margin-inline: 0 !important;
+    }
+  }
   .article-body :global(.align-full-width),
   .article-body :global(.gallery-full-width) {
     width: 100vw !important;
@@ -397,10 +567,17 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     margin-right: -50vw !important;
     max-width: 100vw !important;
     padding-inline: var(--gutter) !important;
+    clear: both;
   }
 
   .article-body :global(.size-small img) { max-width: 340px !important; margin-inline: auto; }
   .article-body :global(.size-medium img) { max-width: 580px !important; margin-inline: auto; }
+
+  .article-body :global(p::after) {
+    content: "";
+    display: table;
+    clear: both;
+  }
 
   /* ── Wix CMS Rich Content Gallery Presets ── */
 
@@ -410,6 +587,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     gap: var(--space-4);
     margin-block: var(--space-8);
     width: 100%;
+    clear: both;
   }
   .article-body :global(.article-gallery-grid.cols-1) { grid-template-columns: 1fr; }
   .article-body :global(.article-gallery-grid.cols-2) { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
@@ -436,7 +614,192 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     transform: scale(1.03);
   }
 
-  /* 2. Fullsize / Slideshow / Thumbnail Preset */
+  /* 2. Collage Preset */
+  .article-body :global(.article-gallery-collage) {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-4);
+    margin-block: var(--space-8);
+    width: 100%;
+    clear: both;
+  }
+  @media (max-width: 640px) {
+    .article-body :global(.article-gallery-collage) {
+      grid-template-columns: 1fr;
+    }
+  }
+  .article-body :global(.article-gallery-collage__hero) {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 0 !important;
+    background: var(--color-surface-hover);
+    height: 100%;
+  }
+  .article-body :global(.article-gallery-collage__hero img) {
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    cursor: pointer;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+  .article-body :global(.article-gallery-collage__hero:hover img) {
+    transform: scale(1.03);
+  }
+  .article-body :global(.article-gallery-collage__grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: var(--space-3);
+  }
+  .article-body :global(.article-gallery-collage__item) {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 0 !important;
+    background: var(--color-surface-hover);
+  }
+  .article-body :global(.article-gallery-collage__item img) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    cursor: pointer;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+  .article-body :global(.article-gallery-collage__item:hover img) {
+    transform: scale(1.03);
+  }
+
+  /* 3. Panorama Slideshow Preset */
+  .article-body :global(.article-gallery-panorama) {
+    margin-block: var(--space-8);
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #0d0d0c;
+    box-shadow: var(--shadow-sm);
+    clear: both;
+  }
+  .article-body :global(.gallery-panorama-stage) {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 21 / 9;
+    min-height: 260px;
+    max-height: 460px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .article-body :global(.gallery-panorama-stage img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: 0 !important;
+    cursor: pointer;
+  }
+
+  /* 4. Slider Track Preset */
+  .article-body :global(.article-gallery-slider-wrap) {
+    position: relative;
+    margin-block: var(--space-8);
+    width: 100%;
+    clear: both;
+  }
+  .article-body :global(.article-gallery-slider__track) {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-bottom: var(--space-4);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .article-body :global(.article-gallery-slider__item) {
+    flex: 0 0 clamp(240px, 55vw, 380px);
+    scroll-snap-align: start;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin: 0 !important;
+    background: var(--color-surface-hover);
+    box-shadow: var(--shadow-sm);
+  }
+  .article-body :global(.article-gallery-slider__item img) {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    cursor: pointer;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+  }
+  .article-body :global(.article-gallery-slider__item:hover img) {
+    transform: scale(1.03);
+  }
+  .article-body :global(.slider-controls) {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .article-body :global(.slider-btn) {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 1.3rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--dur-fast), color var(--dur-fast);
+  }
+  .article-body :global(.slider-btn:hover) {
+    background: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+  }
+
+  /* 5. Columns Preset */
+  .article-body :global(.article-gallery-columns) {
+    display: grid;
+    gap: var(--space-4);
+    margin-block: var(--space-8);
+    width: 100%;
+    clear: both;
+  }
+  .article-body :global(.article-gallery-columns.cols-1) { grid-template-columns: 1fr; }
+  .article-body :global(.article-gallery-columns.cols-2) { grid-template-columns: repeat(2, 1fr); }
+  .article-body :global(.article-gallery-columns.cols-3) { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  @media (max-width: 600px) {
+    .article-body :global(.article-gallery-columns) { grid-template-columns: 1fr !important; }
+  }
+  .article-body :global(.article-gallery-columns__item) {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    margin: 0 !important;
+  }
+  .article-body :global(.article-gallery-columns__item img) {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    cursor: pointer;
+  }
+
+  /* 6. Fullsize / Slideshow / Thumbnail Preset */
   .article-body :global(.article-gallery-fullsize) {
     margin-block: var(--space-8);
     width: 100%;
@@ -445,6 +808,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     overflow: hidden;
     background: var(--color-surface);
     box-shadow: var(--shadow-sm);
+    clear: both;
   }
   .article-body :global(.gallery-main-stage) {
     position: relative;
@@ -542,6 +906,97 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     margin: 0 !important;
   }
 
+  /* Dedicated Panoramic Gallery Preset */
+  .article-body :global(.article-gallery-panorama) {
+    margin-block: var(--space-8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+  }
+  .article-body :global(.panorama-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+    padding-inline: var(--space-2);
+  }
+  .article-body :global(.panorama-badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+  }
+  .article-body :global(.panorama-controls) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .article-body :global(.panorama-nav-btn) {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all var(--dur-fast);
+  }
+  .article-body :global(.panorama-nav-btn:hover) {
+    background: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+  }
+  .article-body :global(.panorama-track) {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    padding-bottom: var(--space-2);
+  }
+  .article-body :global(.article-gallery-panorama__item) {
+    flex: 0 0 90%;
+    max-width: 90%;
+    scroll-snap-align: center;
+    margin: 0 !important;
+  }
+  @media (min-width: 768px) {
+    .article-body :global(.article-gallery-panorama__item) {
+      flex: 0 0 80%;
+      max-width: 80%;
+    }
+  }
+  .article-body :global(.panorama-img-wrap) {
+    width: 100%;
+    aspect-ratio: 21 / 9;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    position: relative;
+  }
+  .article-body :global(.panorama-img-wrap img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    margin: 0 !important;
+    transition: transform var(--dur-normal) var(--ease-out-expo);
+    cursor: zoom-in;
+  }
+  .article-body :global(.panorama-img-wrap img:hover) {
+    transform: scale(1.03);
+  }
+
   /* 3. Masonry Preset */
   .article-body :global(.article-gallery-masonry) {
     column-count: 3;
@@ -580,11 +1035,168 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     margin: 0;
   }
 
-  /* Rich Content Divider */
+  /* Rich Content Section Divider & Section Slide Navigator */
   .article-body :global(.article-divider) {
     border: 0;
     border-top: 1px solid var(--color-border);
     margin-block: var(--space-10);
+  }
+  .article-body :global(.article-section-divider) {
+    margin-block: var(--space-12);
+    position: relative;
+    clear: both;
+  }
+  .article-body :global(.section-divider__line) {
+    height: 1px;
+    background: var(--color-border);
+    width: 100%;
+  }
+  .article-body :global(.section-divider__bar) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-4);
+    gap: var(--space-4);
+  }
+  .article-body :global(.section-divider__badge) {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-widest);
+    color: var(--color-text-tertiary);
+  }
+  .article-body :global(.section-divider__btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--dur-fast);
+  }
+  .article-body :global(.section-divider__btn:hover) {
+    background: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+  }
+
+  /* Rich Text Accordion & Dropdown Menu */
+  .article-body :global(.article-accordion-group) {
+    margin-block: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .article-body :global(.article-accordion) {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-block: var(--space-4);
+    transition: border-color var(--dur-fast);
+  }
+  .article-body :global(.article-accordion[open]) {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+  }
+  .article-body :global(.article-accordion__summary) {
+    padding: var(--space-4) var(--space-5);
+    font-family: var(--font-serif);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    user-select: none;
+  }
+  .article-body :global(.article-accordion__summary::-webkit-details-marker) {
+    display: none;
+  }
+  .article-body :global(.article-accordion__chevron) {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-tertiary);
+    transition: transform var(--dur-fast);
+  }
+  .article-body :global(.article-accordion[open] .article-accordion__chevron) {
+    transform: rotate(180deg);
+    color: var(--color-accent);
+  }
+  .article-body :global(.article-accordion__content) {
+    padding: var(--space-4) var(--space-5) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+
+  /* Rich Text Section Slideshow Navigator */
+  .article-body :global(.article-section-slideshow) {
+    margin-bottom: var(--space-8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--space-2) var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    sticky: top;
+  }
+  .article-body :global(.section-slideshow__info) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+  }
+  .article-body :global(.section-slideshow__counter) {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+  }
+  .article-body :global(.section-slideshow__title) {
+    font-family: var(--font-serif);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 320px;
+  }
+  .article-body :global(.section-nav-arrow) {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-surface-hover);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--dur-fast);
+    flex-shrink: 0;
+  }
+  .article-body :global(.section-nav-arrow:hover) {
+    background: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
   }
 
   /* Rich Content Code blocks */

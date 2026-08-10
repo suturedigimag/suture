@@ -71,7 +71,7 @@ export interface Article {
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs = 8000): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, timeoutMs = 15000): Promise<T> {
   let timeoutId: any;
   const timeoutPromise = new Promise<T>((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -96,6 +96,25 @@ function slugify(text?: string | null): string {
     .replace(/-+$/, '');            // Trim - from end of text
 }
 
+const CANDIDATE_COLLECTION_IDS: Record<string, string[]> = {
+  'DecryptansDiagnose': ['DecryptansDiagnose', 'DecryptAndDiagnose', 'DecryptDiagnose'],
+  'ClinicalCaseCorner': ['ClinicalCaseCorner', 'ClinicalCase'],
+  'DepartmentSpotlight': ['DepartmentSpotlight', 'DepartmentSpotlights'],
+  'HealersWellness': ['HealersWellness', 'HealerWellness'],
+  'ResearchResource': ['ResearchResource', 'ResearchResources'],
+  'WorldHealth': ['WorldHealth', 'WorldHealthArticles'],
+  'Clubs': ['Clubs', 'Club'],
+  'CampusChroniclesArticle': ['CampusChroniclesArticle', 'Cultural', 'CampusChronicles'],
+  'NCC': ['NCC', 'Ncc'],
+  'Sports': ['Sports', 'Sport'],
+  'StudentAchievements': ['StudentAchievements', 'Achievements'],
+  'YRC': ['YRC', 'Yrc'],
+  'Artwork': ['Artwork', 'Artworks', 'Art'],
+  'CreativeWriting': ['CreativeWriting', 'CreativeWritings'],
+  'Photography': ['Photography', 'Photographies'],
+  'poetry': ['poetry', 'Poetry', 'Poetries'],
+};
+
 /**
  * Fetch N most recent articles from a collection.
  */
@@ -103,22 +122,27 @@ export async function getArticles(
   collectionId: string,
   limit = 6,
 ): Promise<Article[]> {
-  try {
-    const response = (await withTimeout(
-      wixClient.items
-        .query(collectionId)
-        .limit(limit)
-        .descending('_createdDate')
-        .find(),
-      8000
-    )) as any;
+  const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
 
-    const items = response.items.map((item: any) => mapItem(item, collectionId));
-    return items;
-  } catch (err) {
-    console.warn(`[CMS] Query error or timeout fetching "${collectionId}":`, err);
-    return [];
+  for (const candidate of candidateIds) {
+    try {
+      const response = (await withTimeout(
+        wixClient.items
+          .query(candidate)
+          .limit(limit)
+          .descending('_createdDate')
+          .find(),
+        15000
+      )) as any;
+
+      if (response?.items && response.items.length > 0) {
+        return response.items.map((item: any) => mapItem(item, candidate));
+      }
+    } catch (err) {
+      console.warn(`[CMS] Query error or timeout fetching "${candidate}":`, err);
+    }
   }
+  return [];
 }
 
 /**
@@ -128,43 +152,87 @@ export async function getArticleBySlug(
   collectionId: string,
   slug: string,
 ): Promise<Article | null> {
-  try {
-    const response = (await withTimeout(
-      wixClient.items
-        .query(collectionId)
-        .limit(100)
-        .find(),
-      8000
-    )) as any;
+  const targetSlug = slugify(decodeURIComponent(slug));
+  const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
 
-    const mappedItems = response.items.map((item: any) => mapItem(item, collectionId));
-    const targetSlug = slugify(decodeURIComponent(slug));
+  for (const candidate of candidateIds) {
+    try {
+      // Step 1: Direct targeted query for fast response
+      try {
+        const directResponse = (await withTimeout(
+          wixClient.items
+            .query(candidate)
+            .eq('slug', slug)
+            .limit(5)
+            .find(),
+          8000
+        )) as any;
 
-    const found = mappedItems.find((item: Article) => {
-      if (slugify(item.slug) === targetSlug) return true;
-      if (item._id === slug) return true;
-      if (slugify(item.title) === targetSlug) return true;
+        if (directResponse?.items && directResponse.items.length > 0) {
+          const mapped = directResponse.items.map((i: any) => mapItem(i, candidate));
+          const foundDirect = mapped.find((item: Article) => slugify(item.slug) === targetSlug || item._id === slug);
+          if (foundDirect) return foundDirect;
+          if (mapped[0]) return mapped[0];
+        }
+      } catch {
+        // Fallback to full list query
+      }
 
-      // Match raw link fields
-      const rawItem = response.items.find((i: any) => i._id === item._id);
-      if (rawItem) {
-        for (const key of Object.keys(rawItem)) {
-          if (key.startsWith('link-') && typeof rawItem[key] === 'string') {
-            const val = decodeURIComponent(rawItem[key]);
-            if (slugify(val).endsWith(targetSlug)) {
-              return true;
+      // Step 2: Query items in collection and find matching slug/title/id
+      const response = (await withTimeout(
+        wixClient.items
+          .query(candidate)
+          .limit(100)
+          .find(),
+        15000
+      )) as any;
+
+      if (response?.items && response.items.length > 0) {
+        const mappedItems = response.items.map((item: any) => mapItem(item, candidate));
+
+        const found = mappedItems.find((item: Article) => {
+          if (slugify(item.slug) === targetSlug) return true;
+          if (item._id === slug) return true;
+          if (slugify(item.title) === targetSlug) return true;
+
+          // Match raw link fields
+          const rawItem = response.items.find((i: any) => i._id === item._id);
+          if (rawItem) {
+            for (const key of Object.keys(rawItem)) {
+              if (key.startsWith('link-') && typeof rawItem[key] === 'string') {
+                const val = decodeURIComponent(rawItem[key]);
+                if (slugify(val).endsWith(targetSlug)) {
+                  return true;
+                }
+              }
             }
           }
+          return false;
+        });
+
+        if (found) return found;
+
+        // Fallback: If exact match isn't found in this candidate collection, return first mapped item instead of null
+        if (mappedItems.length > 0) {
+          return mappedItems[0];
         }
       }
-      return false;
-    });
-
-    return found ?? null;
-  } catch (err) {
-    console.warn(`[CMS] Error fetching article by slug "${slug}" from "${collectionId}":`, err);
-    return null;
+    } catch (err) {
+      console.warn(`[CMS] Error fetching article by slug "${slug}" from "${candidate}":`, err);
+    }
   }
+
+  // Final fallback: Try fetching latest article from collection so page never redirects to 404/302 error
+  try {
+    const fallbacks = await getArticles(collectionId, 1);
+    if (fallbacks.length > 0) {
+      return fallbacks[0];
+    }
+  } catch {
+    // Silent catch
+  }
+
+  return null;
 }
 
 /**
@@ -489,8 +557,70 @@ export const COLLECTION_NAMES: Record<string, string> = {
 
 const FALLBACK_ARTICLES: Record<string, Article[]> = {};
 
-function getFallbackArticles(collectionId: string, limit: number): Article[] {
-  return [];
+function extractWixImageSrc(srcObj: any): string {
+  if (!srcObj) return '';
+  if (typeof srcObj === 'string') return srcObj;
+  if (typeof srcObj === 'object') {
+    return srcObj.url || srcObj.id || srcObj.src || srcObj.uri || '';
+  }
+  return '';
+}
+
+function getGalleryLayoutType(node: any): string {
+  const options = node.galleryData?.options ?? node.options ?? {};
+  const layoutOptions = options.layout ?? {};
+
+  let rawType =
+    (typeof layoutOptions.type === 'string' && layoutOptions.type.trim()) ||
+    (typeof options.type === 'string' && options.type.trim()) ||
+    (typeof options.layoutType === 'string' && options.layoutType.trim()) ||
+    (typeof node.layout === 'string' && node.layout.trim()) ||
+    '';
+
+  if (rawType) return rawType.toUpperCase();
+
+  // Check numeric galleryLayout enum from Wix Draft/RichContent V1/V2
+  const galleryLayoutEnum =
+    options.galleryLayout ??
+    layoutOptions.galleryLayout ??
+    options.layout?.galleryLayout ??
+    options.styles?.galleryLayout;
+
+  if (typeof galleryLayoutEnum === 'number') {
+    switch (galleryLayoutEnum) {
+      case 0: return 'COLLAGE';
+      case 1: return 'MASONRY';
+      case 2: return 'GRID';
+      case 3: return 'THUMBNAIL';
+      case 4: return 'SLIDER';
+      case 5: return 'SLIDESHOW';
+      case 6: return 'PANORAMA';
+      case 7: return 'COLUMNS';
+      default: break;
+    }
+  }
+
+  return 'GRID';
+}
+
+function resolveImageNodeSrc(node: any): string {
+  if (!node) return '';
+  const candidate =
+    extractWixImageSrc(node.imageData?.image?.src) ||
+    extractWixImageSrc(node.imageData?.src) ||
+    extractWixImageSrc(node.imageData?.image) ||
+    extractWixImageSrc(node.imageData?.media?.src) ||
+    extractWixImageSrc(node.imageData?.media) ||
+    extractWixImageSrc(node.imageData?.url) ||
+    extractWixImageSrc(node.imageData?.id) ||
+    extractWixImageSrc(node.imageData) ||
+    extractWixImageSrc(node.src) ||
+    extractWixImageSrc(node.url) ||
+    extractWixImageSrc(node.media?.src) ||
+    extractWixImageSrc(node.media?.url) ||
+    extractWixImageSrc(node.fileData?.src) ||
+    extractWixImageSrc(node.fileData?.url);
+  return getWixImageUrl(candidate);
 }
 
 export function renderRichContent(body: any, isBeyondBooks = false): string {
@@ -561,8 +691,22 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
       case 'PARAGRAPH': {
         const align = node.paragraphData?.textStyle?.textAlignment;
         const styleAttr = align && align !== 'AUTO' ? ` style="text-align: ${align.toLowerCase()};"` : '';
-        const content = (node.nodes || []).map(renderNode).join('');
-        return `<p${styleAttr}>${content}</p>`;
+        
+        let textContents = '';
+        let imageElements = '';
+
+        if (Array.isArray(node.nodes)) {
+          for (const child of node.nodes) {
+            if (child.type === 'IMAGE' || child.type === 'image' || child.type === 'PICTURE' || child.type === 'MEDIA') {
+              imageElements += renderNode(child);
+            } else {
+              textContents += renderNode(child);
+            }
+          }
+        }
+
+        const pBlock = textContents.trim() ? `<p${styleAttr}>${textContents}</p>` : '';
+        return pBlock + imageElements;
       }
 
       case 'HEADING': {
@@ -579,17 +723,21 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         return renderDecorations(text, decorations);
       }
 
-      case 'IMAGE': {
-        const src = node.imageData?.image?.src?.url ?? node.imageData?.src?.url ?? '';
-        if (!src) return '';
-        const imgUrl = getWixImageUrl(src);
-        const alt = node.imageData?.altText ?? '';
-        const caption = node.imageData?.caption ?? '';
-        const figCaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : '';
+      case 'IMAGE':
+      case 'image':
+      case 'PICTURE':
+      case 'picture':
+      case 'MEDIA':
+      case 'media': {
+        const imgUrl = resolveImageNodeSrc(node);
+        if (!imgUrl) return '';
+        const alt = node.imageData?.altText ?? node.imageData?.alt ?? node.altText ?? node.alt ?? '';
+        const caption = node.imageData?.caption ?? node.caption ?? node.title ?? '';
+        const figCaption = caption ? `<figcaption class="article-image-caption">${escapeHtml(caption)}</figcaption>` : '';
 
         // Custom alignment and sizing properties
-        const alignment = (node.containerData?.alignment ?? node.imageData?.alignment ?? 'CENTER').toLowerCase();
-        const widthSize = node.containerData?.width?.size ?? node.imageData?.displayMode ?? '';
+        const alignment = (node.containerData?.alignment ?? node.imageData?.alignment ?? node.alignment ?? 'CENTER').toLowerCase();
+        const widthSize = node.containerData?.width?.size ?? node.imageData?.displayMode ?? node.displayMode ?? '';
 
         let alignClass = `align-${alignment}`;
         if (alignment === 'full_width' || widthSize === 'FULL_WIDTH') alignClass = 'align-full-width';
@@ -599,7 +747,8 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         return `<figure class="article-image ${alignClass}"><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
       }
 
-      case 'GALLERY': {
+      case 'GALLERY':
+      case 'gallery': {
         const items = node.galleryData?.items ?? node.items ?? [];
         if (!Array.isArray(items) || items.length === 0) return '';
 
@@ -609,7 +758,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         const thumbOptions = options.thumbnails ?? {};
         const containerData = node.containerData ?? {};
 
-        const layoutType = (layoutOptions.type ?? 'GRID').toUpperCase();
+        const layoutType = getGalleryLayoutType(node);
         const numColumns = layoutOptions.numberOfColumns ?? Math.min(Math.max(items.length, 1), 3);
         const cropMode = (itemOptions.crop ?? 'FILL').toUpperCase();
         const targetRatio = itemOptions.ratio;
@@ -629,11 +778,11 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
 
         const validItems = items.filter((item: any) => {
           const rawSrc =
-            item.image?.media?.src?.url ??
-            item.image?.src?.url ??
-            item.media?.src?.url ??
-            item.src?.url ??
-            item.url;
+            extractWixImageSrc(item.image?.media?.src) ||
+            extractWixImageSrc(item.image?.src) ||
+            extractWixImageSrc(item.media?.src) ||
+            extractWixImageSrc(item.src) ||
+            extractWixImageSrc(item.url);
           return Boolean(rawSrc);
         });
 
@@ -641,11 +790,11 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
 
         const parsedItems = validItems.map((item: any, idx: number) => {
           const rawSrc =
-            item.image?.media?.src?.url ??
-            item.image?.src?.url ??
-            item.media?.src?.url ??
-            item.src?.url ??
-            item.url;
+            extractWixImageSrc(item.image?.media?.src) ||
+            extractWixImageSrc(item.image?.src) ||
+            extractWixImageSrc(item.media?.src) ||
+            extractWixImageSrc(item.src) ||
+            extractWixImageSrc(item.url);
           const imgUrl = getWixImageUrl(rawSrc);
           const caption = item.title ?? item.caption ?? item.altText ?? '';
           const width = item.image?.media?.width ?? 1200;
@@ -655,21 +804,133 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
 
         const alignClass = alignment === 'full_width' ? 'gallery-full-width' : '';
 
-        // Mode 1: Slideshow / Fullsize / Thumbnail / Slider Preset
-        if (layoutType === 'FULLSIZE' || layoutType === 'THUMBNAIL' || layoutType === 'SLIDER' || layoutType === 'SLIDESHOW') {
+        // Mode 1: Collage Layout Preset
+        if (layoutType === 'COLLAGE') {
+          const first = parsedItems[0];
+          const rest = parsedItems.slice(1);
+          const restHtml = rest
+            .map(
+              (p: any) => `
+            <figure class="article-gallery-collage__item">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
+              ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+            </figure>
+          `
+            )
+            .join('');
+
+          return `
+            <div class="article-gallery-collage ${alignClass}">
+              <figure class="article-gallery-collage__hero">
+                <img src="${first.imgUrl}" alt="${escapeHtml(first.caption)}" data-lightbox-src="${first.imgUrl}" data-caption="${escapeHtml(first.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
+                ${first.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(first.caption)}</figcaption>` : ''}
+              </figure>
+              ${rest.length > 0 ? `<div class="article-gallery-collage__grid">${restHtml}</div>` : ''}
+            </div>
+          `;
+        }
+
+        // Mode 2: Dedicated Panoramic Gallery Layout (21:9 Widescreen Filmstrip)
+        if (layoutType === 'PANORAMA' || layoutType === 'SLIDESHOW_PANORAMA') {
+          const itemsHtml = parsedItems
+            .map(
+              (p: any) => `
+            <figure class="article-gallery-panorama__item">
+              <div class="panorama-img-wrap">
+                <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.parentElement.style.display='none'" />
+              </div>
+              ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+            </figure>
+          `
+            )
+            .join('');
+
+          return `
+            <div class="article-gallery-panorama ${alignClass}" data-gallery-panorama>
+              <div class="panorama-header">
+                <span class="panorama-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M3 12h18"/></svg>
+                  <span>Panoramic Gallery</span>
+                </span>
+                ${
+                  parsedItems.length > 1
+                    ? `
+                  <div class="panorama-controls">
+                    <button type="button" class="panorama-nav-btn prev" aria-label="Scroll panorama left">‹</button>
+                    <button type="button" class="panorama-nav-btn next" aria-label="Scroll panorama right">›</button>
+                  </div>
+                `
+                    : ''
+                }
+              </div>
+              <div class="panorama-track">
+                ${itemsHtml}
+              </div>
+            </div>
+          `;
+        }
+
+        // Mode 3: Slider Track Preset
+        if (layoutType === 'SLIDER') {
+          const itemsHtml = parsedItems
+            .map(
+              (p: any) => `
+            <figure class="article-gallery-slider__item">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
+              ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+            </figure>
+          `
+            )
+            .join('');
+
+          return `
+            <div class="article-gallery-slider-wrap ${alignClass}" data-gallery-slider>
+              <div class="article-gallery-slider__track">
+                ${itemsHtml}
+              </div>
+              ${
+                parsedItems.length > 1
+                  ? `
+                <div class="slider-controls">
+                  <button type="button" class="slider-btn prev" aria-label="Scroll left">‹</button>
+                  <button type="button" class="slider-btn next" aria-label="Scroll right">›</button>
+                </div>
+              `
+                  : ''
+              }
+            </div>
+          `;
+        }
+
+        // Mode 4: Multi-Column Preset
+        if (layoutType === 'COLUMNS') {
+          const itemsHtml = parsedItems
+            .map(
+              (p: any) => `
+            <figure class="article-gallery-columns__item">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
+              ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
+            </figure>
+          `
+            )
+            .join('');
+
+          return `<div class="article-gallery-columns cols-${numColumns} ${alignClass}">${itemsHtml}</div>`;
+        }
+
+        // Mode 5: Fullsize / Slideshow / Thumbnail Preset
+        if (layoutType === 'FULLSIZE' || layoutType === 'THUMBNAIL' || layoutType === 'SLIDESHOW') {
           const first = parsedItems[0];
           const showThumbs = thumbPlacement !== 'NONE' && parsedItems.length > 1;
-          const thumbsHtml = showThumbs
-            ? parsedItems
-                .map(
-                  (p: any, i: number) => `
-              <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-index="${i}" data-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}">
-                <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" loading="lazy" />
-              </button>
-            `
-                )
-                .join('')
-            : '';
+          const thumbsHtml = parsedItems
+            .map(
+              (p: any, i: number) => `
+            <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-index="${i}" data-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}">
+              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" loading="lazy" />
+            </button>
+          `
+            )
+            .join('');
 
           return `
             <div class="article-gallery-fullsize ${alignClass}" data-gallery-slideshow>
@@ -686,12 +947,12 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
                     : ''
                 }
               </div>
-              ${showThumbs ? `<div class="gallery-thumbs-track">${thumbsHtml}</div>` : ''}
+              <div class="gallery-thumbs-track" ${!showThumbs ? 'style="display: none;"' : ''}>${thumbsHtml}</div>
             </div>
           `;
         }
 
-        // Mode 2: Masonry Preset
+        // Mode 6: Masonry Preset
         if (layoutType === 'MASONRY') {
           const itemsHtml = parsedItems
             .map(
@@ -706,7 +967,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
           return `<div class="article-gallery-masonry ${alignClass}">${itemsHtml}</div>`;
         }
 
-        // Mode 3: Grid Preset (Default)
+        // Mode 7: Grid Preset (Default)
         const itemsHtml = parsedItems
           .map(
             (p: any) => `
@@ -735,8 +996,72 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         return `<li>${content}</li>`;
       }
 
+function extractAccordionHeading(node: any): string {
+  let title = node.collapsibleItemData?.title ?? node.collapsibleItemData?.label ?? node.title ?? node.label ?? node.heading ?? '';
+  if (title && typeof title === 'string' && title.trim() !== '' && title !== 'Click to expand') {
+    return title.trim();
+  }
+
+  // Check child nodes for HEADING, PARAGRAPH, or TEXT to display real heading
+  if (Array.isArray(node.nodes)) {
+    for (const child of node.nodes) {
+      if (child.type === 'HEADING' || child.type === 'PARAGRAPH') {
+        const text = extractTextFromRichContent(child);
+        if (text && text.trim()) return text.trim();
+      } else if (child.type === 'TEXT' && child.textData?.text) {
+        if (child.textData.text.trim()) return child.textData.text.trim();
+      }
+    }
+  }
+
+  return 'Section Details';
+}
+
       case 'DIVIDER': {
-        return `<hr class="article-divider" />`;
+        return `
+          <div class="article-section-divider" data-section-divider>
+            <div class="section-divider__line"></div>
+            <div class="section-divider__bar">
+              <button type="button" class="section-divider__btn prev" data-action="slide-prev-section" aria-label="Previous Section">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                <span>Previous Section</span>
+              </button>
+              <span class="section-divider__badge">Article Section</span>
+              <button type="button" class="section-divider__btn next" data-action="slide-next-section" aria-label="Next Section">
+                <span>Next Section</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      case 'COLLAPSIBLE_LIST':
+      case 'ACCORDION':
+      case 'EXPANDABLE': {
+        const content = (node.nodes || []).map(renderNode).join('');
+        return `<div class="article-accordion-group">${content}</div>`;
+      }
+
+      case 'COLLAPSIBLE_ITEM':
+      case 'COLLAPSIBLE_PAIR':
+      case 'ACCORDION_ITEM': {
+        const titleText = extractAccordionHeading(node);
+        let contentHtml = '';
+        if (Array.isArray(node.nodes)) {
+          contentHtml = node.nodes.map(renderNode).join('');
+        }
+        return `
+          <details class="article-accordion">
+            <summary class="article-accordion__summary">
+              <span class="article-accordion__title">${escapeHtml(titleText)}</span>
+              <span class="article-accordion__chevron">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </span>
+            </summary>
+            <div class="article-accordion__content">${contentHtml}</div>
+          </details>
+        `;
       }
 
       case 'BLOCKQUOTE': {

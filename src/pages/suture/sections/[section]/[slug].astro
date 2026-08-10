@@ -13,15 +13,11 @@ const { section, slug } = Astro.params as { section: string; slug: string };
 const collectionId = SECTION_ROUTE_MAP[section];
 if (!collectionId) return Astro.redirect('/suture/sections');
 
-const [article, relatedRaw] = await Promise.all([
-  getArticleBySlug(collectionId, slug),
-  getArticles(collectionId, 4),
-]);
-
+const article = await getArticleBySlug(collectionId, slug);
 if (!article) return Astro.redirect('/suture/sections/' + section);
 
-// Exclude current article from related
-const related = relatedRaw.filter((a) => a.slug !== slug);
+const relatedRaw = await getArticles(collectionId, 4);
+const related = relatedRaw.filter((a) => a.slug !== article.slug);
 const sectionName = COLLECTION_NAMES[section] ?? section;
 ---
 
