@@ -216,7 +216,8 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
       };
 
       const navigateToSection = (index: number) => {
-        updateSlideshowState(index);
+        const total = sectionTargets.length;
+        updateSlideshowState((index + total) % total);
         sectionTargets[currentSectionIdx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
 

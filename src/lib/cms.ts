@@ -553,10 +553,6 @@ export const COLLECTION_NAMES: Record<string, string> = {
   'poetry':                'Poetry',
 };
 
-// ── Fallback Mock Data Generator ─────────────────────────────────
-
-const FALLBACK_ARTICLES: Record<string, Article[]> = {};
-
 function extractWixImageSrc(srcObj: any): string {
   if (!srcObj) return '';
   if (typeof srcObj === 'string') return srcObj;
@@ -570,7 +566,7 @@ function getGalleryLayoutType(node: any): string {
   const options = node.galleryData?.options ?? node.options ?? {};
   const layoutOptions = options.layout ?? {};
 
-  let rawType =
+  const rawType =
     (typeof layoutOptions.type === 'string' && layoutOptions.type.trim()) ||
     (typeof options.type === 'string' && options.type.trim()) ||
     (typeof options.layoutType === 'string' && options.layoutType.trim()) ||
