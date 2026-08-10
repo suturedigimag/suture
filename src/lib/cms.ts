@@ -996,27 +996,6 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         return `<li>${content}</li>`;
       }
 
-function extractAccordionHeading(node: any): string {
-  let title = node.collapsibleItemData?.title ?? node.collapsibleItemData?.label ?? node.title ?? node.label ?? node.heading ?? '';
-  if (title && typeof title === 'string' && title.trim() !== '' && title !== 'Click to expand') {
-    return title.trim();
-  }
-
-  // Check child nodes for HEADING, PARAGRAPH, or TEXT to display real heading
-  if (Array.isArray(node.nodes)) {
-    for (const child of node.nodes) {
-      if (child.type === 'HEADING' || child.type === 'PARAGRAPH') {
-        const text = extractTextFromRichContent(child);
-        if (text && text.trim()) return text.trim();
-      } else if (child.type === 'TEXT' && child.textData?.text) {
-        if (child.textData.text.trim()) return child.textData.text.trim();
-      }
-    }
-  }
-
-  return 'Section Details';
-}
-
       case 'DIVIDER': {
         return `
           <div class="article-section-divider" data-section-divider>
@@ -1039,20 +1018,59 @@ function extractAccordionHeading(node: any): string {
       case 'COLLAPSIBLE_LIST':
       case 'ACCORDION':
       case 'EXPANDABLE': {
+        const titleText =
+          node.collapsibleListData?.title ??
+          node.collapsibleItemData?.title ??
+          node.title ??
+          '';
+        const titleHeader = titleText
+          ? `<h3 class="article-accordion-group__title">${escapeHtml(titleText)}</h3>`
+          : '';
         const content = (node.nodes || []).map(renderNode).join('');
-        return `<div class="article-accordion-group">${content}</div>`;
+        return `<div class="article-accordion-group">${titleHeader}${content}</div>`;
       }
 
       case 'COLLAPSIBLE_ITEM':
       case 'COLLAPSIBLE_PAIR':
       case 'ACCORDION_ITEM': {
-        const titleText = extractAccordionHeading(node);
-        let contentHtml = '';
-        if (Array.isArray(node.nodes)) {
-          contentHtml = node.nodes.map(renderNode).join('');
+        let titleText =
+          node.collapsibleItemData?.title ??
+          node.collapsibleItemData?.label ??
+          node.title ??
+          node.label ??
+          node.heading ??
+          '';
+
+        let childNodes = Array.isArray(node.nodes) ? [...node.nodes] : [];
+        let contentNodes = childNodes;
+
+        // If titleText is not explicitly set on collapsibleItemData, extract title from first child node
+        if (!titleText && childNodes.length > 0) {
+          const firstText = extractTextFromRichContent(childNodes[0]);
+          if (firstText && firstText.trim()) {
+            titleText = firstText.trim();
+            contentNodes = childNodes.slice(1);
+          }
         }
+
+        // If titleText was explicitly set, check if first child node is just a duplicate of titleText
+        if (titleText && childNodes.length > 0) {
+          const firstText = extractTextFromRichContent(childNodes[0]);
+          if (firstText && firstText.trim() === titleText.trim()) {
+            contentNodes = childNodes.slice(1);
+          }
+        }
+
+        if (!titleText) {
+          titleText = 'Section Details';
+        }
+
+        const isExpanded = node.collapsibleItemData?.expanded ?? false;
+        const openAttr = isExpanded ? ' open' : '';
+        const contentHtml = contentNodes.map(renderNode).join('');
+
         return `
-          <details class="article-accordion">
+          <details class="article-accordion"${openAttr}>
             <summary class="article-accordion__summary">
               <span class="article-accordion__title">${escapeHtml(titleText)}</span>
               <span class="article-accordion__chevron">
