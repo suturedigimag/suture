@@ -1,7 +1,6 @@
 ---
-/**
- * Footer.astro — The Suture site footer
- */
+import { Image } from 'astro:assets';
+import logoImg from '../assets/images/logo.png';
 ---
 
 <footer class="footer" role="contentinfo">
@@ -11,7 +10,7 @@
       <!-- Logotype -->
       <div class="footer__brand">
         <a href="/suture" class="footer__logo-link" aria-label="The Suture — Home">
-          <img src="/images/logo.png" alt="The Suture Logo" class="footer__logo-img" />
+          <Image src={logoImg} alt="The Suture Logo" class="footer__logo-img" loading="lazy" decoding="async" />
         </a>
         <p class="footer__tagline">The independent editorial publication of Literature Club.</p>
         <p style="font-size: var(--fs-xs); color: var(--color-text-tertiary); margin-top: var(--space-4);">

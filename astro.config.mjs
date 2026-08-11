@@ -5,6 +5,15 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
+  image: {
+    domains: ['static.wixstatic.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'static.wixstatic.com',
+      },
+    ],
+  },
   integrations: [react()],
   adapter: vercel({
     webAnalytics: {
@@ -13,6 +22,10 @@ export default defineConfig({
   }),
   site: 'https://literatureclub.in',
   trailingSlash: 'never',
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover',
+  },
   vite: {
     css: {
       preprocessorOptions: {},

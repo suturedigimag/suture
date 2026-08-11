@@ -120,6 +120,27 @@ const CANDIDATE_COLLECTION_IDS: Record<string, string[]> = {
   'PhotoTeam': ['PhotoTeam', 'Photo_Team', 'Photo', 'Photographers', 'PhotographyTeam', 'PhotoTeamCollection', 'PhotosTeam', 'Phototeam'],
 };
 
+// ── Server-side Memory Cache for Blazing Fast Performance ────────
+const cmsCache = new Map<string, { data: any; expiry: number }>();
+const DEFAULT_TTL_MS = 120_000; // 2 minutes TTL
+
+async function getCached<T>(key: string, fetchFn: () => Promise<T>, ttlMs = DEFAULT_TTL_MS): Promise<T> {
+  const cached = cmsCache.get(key);
+  if (cached && Date.now() < cached.expiry) {
+    return cached.data;
+  }
+  try {
+    const data = await fetchFn();
+    if (data !== null && data !== undefined) {
+      cmsCache.set(key, { data, expiry: Date.now() + ttlMs });
+    }
+    return data;
+  } catch (err) {
+    if (cached) return cached.data;
+    throw err;
+  }
+}
+
 /**
  * Fetch N most recent articles from a collection.
  */
@@ -127,27 +148,29 @@ export async function getArticles(
   collectionId: string,
   limit = 6,
 ): Promise<Article[]> {
-  const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
+  return getCached(`articles:${collectionId}:${limit}`, async () => {
+    const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
 
-  for (const candidate of candidateIds) {
-    try {
-      const response = (await withTimeout(
-        wixClient.items
-          .query(candidate)
-          .limit(limit)
-          .descending('_createdDate')
-          .find(),
-        15000
-      )) as any;
+    for (const candidate of candidateIds) {
+      try {
+        const response = (await withTimeout(
+          wixClient.items
+            .query(candidate)
+            .limit(limit)
+            .descending('_createdDate')
+            .find(),
+          15000
+        )) as any;
 
-      if (response?.items && response.items.length > 0) {
-        return response.items.map((item: any) => mapItem(item, candidate));
+        if (response?.items && response.items.length > 0) {
+          return response.items.map((item: any) => mapItem(item, candidate));
+        }
+      } catch (err) {
+        console.warn(`[CMS] Query error or timeout fetching "${candidate}":`, err);
       }
-    } catch (err) {
-      console.warn(`[CMS] Query error or timeout fetching "${candidate}":`, err);
     }
-  }
-  return [];
+    return [];
+  });
 }
 
 /**
@@ -1153,83 +1176,85 @@ function getManualSortVal(item: any): string | null {
 }
 
 export async function getTeamMembers(collectionId: string): Promise<AboutMember[]> {
-  const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
+  return getCached(`team:${collectionId}`, async () => {
+    const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
 
-  for (const candidate of candidateIds) {
-    try {
-      const response = (await withTimeout(
-        wixClient.items
-          .query(candidate)
-          .find(),
-        8000
-      )) as any;
+    for (const candidate of candidateIds) {
+      try {
+        const response = (await withTimeout(
+          wixClient.items
+            .query(candidate)
+            .find(),
+          8000
+        )) as any;
 
-      if (response?.items && response.items.length > 0) {
-        const sortedItems = [...response.items].sort((a: any, b: any) => {
-          const valA = getManualSortVal(a);
-          const valB = getManualSortVal(b);
+        if (response?.items && response.items.length > 0) {
+          const sortedItems = [...response.items].sort((a: any, b: any) => {
+            const valA = getManualSortVal(a);
+            const valB = getManualSortVal(b);
 
-          if (valA !== null && valB !== null) {
-            if (valA < valB) return -1;
-            if (valA > valB) return 1;
+            if (valA !== null && valB !== null) {
+              if (valA < valB) return -1;
+              if (valA > valB) return 1;
+              return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
+            }
+            if (valA !== null) return -1;
+            if (valB !== null) return 1;
             return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
-          }
-          if (valA !== null) return -1;
-          if (valB !== null) return 1;
-          return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
-        });
+          });
 
-        return sortedItems.map((item: any) => {
-          const data = item.data ? { ...item, ...item.data } : item;
-          const rawPhoto =
-            data.profilePicture ??
-            data.photo?.url ??
-            data.photo ??
-            data.image?.url ??
-            data.image ??
-            data.picture ??
-            data.avatar ??
-            undefined;
+          return sortedItems.map((item: any) => {
+            const data = item.data ? { ...item, ...item.data } : item;
+            const rawPhoto =
+              data.profilePicture ??
+              data.photo?.url ??
+              data.photo ??
+              data.image?.url ??
+              data.image ??
+              data.picture ??
+              data.avatar ??
+              undefined;
 
-          const rawBio =
-            data.bio ??
-            data.about ??
-            data.description ??
-            data.details ??
-            data.summary ??
-            data.longDescription ??
-            '';
-          const extractedBio = extractTextFromRichContent(rawBio);
+            const rawBio =
+              data.bio ??
+              data.about ??
+              data.description ??
+              data.details ??
+              data.summary ??
+              data.longDescription ??
+              '';
+            const extractedBio = extractTextFromRichContent(rawBio);
 
-          const name =
-            data.fullName ??
-            data.name ??
-            data.memberName ??
-            data.personName ??
-            data.title ??
-            'Member';
+            const name =
+              data.fullName ??
+              data.name ??
+              data.memberName ??
+              data.personName ??
+              data.title ??
+              'Member';
 
-          const role =
-            data.role ??
-            data.position ??
-            data.designation ??
-            data.title ??
-            '';
+            const role =
+              data.role ??
+              data.position ??
+              data.designation ??
+              data.title ??
+              '';
 
-          return {
-            _id: item._id,
-            name,
-            role,
-            bio: extractedBio || (typeof rawBio === 'string' ? rawBio : ''),
-            photo: rawPhoto ? getWixImageUrl(rawPhoto) : undefined,
-          };
-        });
+            return {
+              _id: item._id,
+              name,
+              role,
+              bio: extractedBio || (typeof rawBio === 'string' ? rawBio : ''),
+              photo: rawPhoto ? getWixImageUrl(rawPhoto) : undefined,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn(`[CMS] Error fetching team members from "${candidate}":`, err);
       }
-    } catch (err) {
-      console.warn(`[CMS] Error fetching team members from "${candidate}":`, err);
     }
-  }
-  return [];
+    return [];
+  });
 }
 
 export async function getAboutMembers(): Promise<AboutMember[]> {

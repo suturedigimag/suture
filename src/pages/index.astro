@@ -7,6 +7,12 @@ export const prerender = false;
  *
  * This is the parent site. The Suture lives at /suture/suture.
  */
+import { Image } from 'astro:assets';
+import litclubLogo from '../assets/images/litclub_logo.jpg';
+import aboutMagic from '../assets/images/about_magic.jpg';
+import axonConf from '../assets/images/axon_conference.jpg';
+import sportsFootball from '../assets/images/sports_football.jpg';
+import culturalDance from '../assets/images/cultural_dance.jpg';
 import '../styles/global.css';
 import { getEvents } from '../lib/cms';
 
@@ -21,6 +27,13 @@ const events = await getEvents(6);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, id: wixDesktopViewport" />
+  
+  <!-- Resource Preconnects for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://static.wixstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" />
+
   <title>{title}</title>
   <meta name="description" content={description} />
   <link rel="canonical" href="https://saviosajujoseph55.wixsite.com/psglitclub" />
@@ -49,7 +62,7 @@ const events = await getEvents(6);
   <header class="lc-nav" id="lc-nav">
     <nav class="lc-nav__inner" aria-label="Main navigation">
       <a href="/" class="lc-nav__logo" aria-label="Literature Club — Home">
-        <img src="/images/litclub_logo.jpg" alt="Lit Club" class="lc-nav__logo-img" />
+        <Image src={litclubLogo} alt="Lit Club" class="lc-nav__logo-img" loading="eager" decoding="async" fetchpriority="high" />
         <span class="lc-nav__logo-text">Lit Club</span>
       </a>
       <ul class="lc-nav__links" role="list">
@@ -138,28 +151,28 @@ const events = await getEvents(6);
               <div class="lc-carousel" id="lc-carousel">
                 <div class="lc-carousel__slides">
                   <div class="lc-carousel__slide active">
-                    <img src="/images/about_magic.jpg" alt="Literature" class="lc-carousel__img" />
+                    <Image src={aboutMagic} alt="Literature" class="lc-carousel__img" loading="lazy" decoding="async" />
                     <div class="lc-carousel__caption">
                       <h4 class="lc-carousel__caption-title">Literature & Poetry</h4>
                       <p class="lc-carousel__caption-text">Student essays, prose, and heartfelt poetry.</p>
                     </div>
                   </div>
                   <div class="lc-carousel__slide">
-                    <img src="/images/axon_conference.jpg" alt="Conference" class="lc-carousel__img" />
+                    <Image src={axonConf} alt="Conference" class="lc-carousel__img" loading="lazy" decoding="async" />
                     <div class="lc-carousel__caption">
                       <h4 class="lc-carousel__caption-title">Clubs & Symposia</h4>
                       <p class="lc-carousel__caption-text">AXON '26 panel discussions and active debate clubs.</p>
                     </div>
                   </div>
                   <div class="lc-carousel__slide">
-                    <img src="/images/sports_football.jpg" alt="Sports" class="lc-carousel__img" />
+                    <Image src={sportsFootball} alt="Sports" class="lc-carousel__img" loading="lazy" decoding="async" />
                     <div class="lc-carousel__caption">
                       <h4 class="lc-carousel__caption-title">Sports & Leagues</h4>
                       <p class="lc-carousel__caption-text">PSG athletic meets and clinical tournaments.</p>
                     </div>
                   </div>
                   <div class="lc-carousel__slide">
-                    <img src="/images/cultural_dance.jpg" alt="Cultural" class="lc-carousel__img" />
+                    <Image src={culturalDance} alt="Cultural" class="lc-carousel__img" loading="lazy" decoding="async" />
                     <div class="lc-carousel__caption">
                       <h4 class="lc-carousel__caption-title">Arts & Culture</h4>
                       <p class="lc-carousel__caption-text">Student art showcases and annual dance programs.</p>
@@ -257,9 +270,20 @@ const events = await getEvents(6);
             <behold-widget feed-id="dyDOswbye7ZO7FHg57yE"></behold-widget>
             <script>
               (() => {
-                if(window.__bhldScript)return;window.__bhldScript=true;
-                const d=document,s=d.createElement("script");s.type="module";
-                s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+                if (window.__bhldScript) return;
+                const target = document.querySelector('behold-widget');
+                if (!target) return;
+                const observer = new IntersectionObserver((entries) => {
+                  if (entries[0].isIntersecting) {
+                    window.__bhldScript = true;
+                    const s = document.createElement('script');
+                    s.type = 'module';
+                    s.src = 'https://w.behold.so/widget.js';
+                    document.head.append(s);
+                    observer.disconnect();
+                  }
+                }, { rootMargin: '300px' });
+                observer.observe(target);
               })();
             </script>
           </div>
@@ -274,7 +298,7 @@ const events = await getEvents(6);
           <p class="eyebrow">Visit Us</p>
           <h2 class="lc-visit__title" id="visit-heading">PSG LIT CLUB</h2>
           <div class="lc-visit__logo-wrap">
-            <img src="/images/litclub_logo.jpg" alt="PSG Lit Club Logo" class="lc-visit__logo" />
+            <Image src={litclubLogo} alt="PSG Lit Club Logo" class="lc-visit__logo" loading="lazy" decoding="async" />
           </div>
           <p class="lc-visit__sub">Coimbatore, Tamil Nadu</p>
         </div>

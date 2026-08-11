@@ -8,6 +8,9 @@
  * - Brand: Logo + "The Suture" serif title text
  * - Color Scheme: Editorial warm off-white with glassmorphic scroll effect & brand red accent
  */
+import { Image } from 'astro:assets';
+import logoImg from '../assets/images/logo.png';
+
 const isHome = Astro.url.pathname === '/suture' || Astro.url.pathname === '/suture/';
 ---
 
@@ -91,7 +94,7 @@ const isHome = Astro.url.pathname === '/suture' || Astro.url.pathname === '/sutu
 
       <!-- Brand Logo + "The Suture" Title Text -->
       <a href="/suture" class="brand-link" aria-label="The Suture — Home">
-        <img src="/images/logo.png" alt="The Suture Logo" class="brand-logo" onerror="this.style.display='none'" />
+        <Image src={logoImg} alt="The Suture Logo" class="brand-logo" loading="eager" decoding="async" fetchpriority="high" />
         <span class="brand-title">The Suture</span>
       </a>
     </div>

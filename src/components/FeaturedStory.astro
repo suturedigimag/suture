@@ -3,6 +3,7 @@
  * FeaturedStory.astro — Large featured article card
  * 60/40 image+text split layout. Pulls the second most-recent article.
  */
+import { Image } from 'astro:assets';
 import type { Article } from '../lib/cms';
 
 interface Props {
@@ -30,9 +31,11 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
       <!-- Image -->
       <div class="featured-story__img-wrap">
         {article.coverImage ? (
-          <img
+          <Image
             src={article.coverImage}
             alt={article.title}
+            width={1200}
+            height={750}
             loading="lazy"
             decoding="async"
             class="featured-story__img"

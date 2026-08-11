@@ -5,6 +5,7 @@
  *
  * Variants: 'default' | 'featured' | 'compact'
  */
+import { Image } from 'astro:assets';
 import type { Article } from '../lib/cms';
 
 interface Props {
@@ -43,9 +44,11 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
     {/* Cover image (not rendered for Beyond The Books) */}
     {article.coverImage && !['Artwork', 'CreativeWriting', 'Photography', 'poetry'].includes(article.collectionId || '') && (
       <div class="editorial-card__img-wrap">
-        <img
+        <Image
           src={article.coverImage}
           alt={article.title}
+          width={600}
+          height={400}
           loading="lazy"
           decoding="async"
           class="editorial-card__img"

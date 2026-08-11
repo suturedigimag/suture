@@ -4,6 +4,7 @@
  * Displays the most recently published article.
  * Features: parallax scroll, fade-in on load, dark gradient overlay.
  */
+import { Image } from 'astro:assets';
 import { getArticleUrl, COLLECTION_NAMES, type Article } from '../lib/cms';
 
 interface Props {
@@ -30,9 +31,11 @@ const articleHref = getArticleUrl(article);
   <!-- Background image (parallax target) -->
   <div class="hero__bg" id="hero-bg" aria-hidden="true">
     {article.coverImage ? (
-      <img
+      <Image
         src={article.coverImage}
         alt=""
+        width={1600}
+        height={900}
         class="hero__img"
         loading="eager"
         decoding="async"

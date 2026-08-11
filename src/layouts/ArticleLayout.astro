@@ -3,6 +3,7 @@
  * ArticleLayout.astro — Article-specific layout
  * Includes reading progress bar activation, author block, related articles strip.
  */
+import { Image } from 'astro:assets';
 import Base from './Base.astro';
 import Nav from '../components/Nav.astro';
 import AuthorBlock from '../components/AuthorBlock.astro';
@@ -41,13 +42,14 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
       <!-- Hero cover (Hidden as fallback if no real cover photo is provided) -->
       {hasRealCoverImage && (
         <div class="article-cover">
-          <img
-            src={article.coverImage}
+          <Image
+            src={article.coverImage!}
             alt={article.title}
+            width={1200}
+            height={600}
             class="article-cover__img"
             loading="eager"
             decoding="async"
-            onerror="this.parentElement.style.display='none'"
           />
           <div class="article-cover__gradient"></div>
         </div>
@@ -90,11 +92,12 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
           <div class="article-signature" data-reveal>
             <div class="article-signature__header">
               {article.authorPhoto && (
-                <img
+                <Image
                   src={article.authorPhoto}
                   alt={article.author}
+                  width={64}
+                  height={64}
                   class="article-signature__photo"
-                  onerror="this.style.display='none'"
                 />
               )}
               <div class="article-signature__meta">
@@ -125,7 +128,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
                 >
                   {rel.coverImage && (
                     <div class="article-related__img-wrap">
-                      <img src={rel.coverImage} alt={rel.title} loading="lazy" decoding="async" />
+                      <Image src={rel.coverImage} alt={rel.title} width={400} height={266} loading="lazy" decoding="async" />
                     </div>
                   )}
                   <h3 class="article-related__title">{rel.title}</h3>

@@ -1,7 +1,6 @@
 ---
-/**
- * AuthorBlock.astro — Author signature with photo, name, and date.
- */
+import { Image } from 'astro:assets';
+
 interface Props {
   author?: string;
   authorPhoto?: string;
@@ -14,15 +13,14 @@ const { author, authorPhoto, date } = Astro.props;
 {(author || date) && (
   <div class="author-block">
     {authorPhoto && (
-      <img
+      <Image
         src={authorPhoto}
         alt={author ?? 'Author'}
         class="author-block__photo"
         loading="lazy"
         decoding="async"
-        width="40"
-        height="40"
-        onerror="this.style.display='none'"
+        width={40}
+        height={40}
       />
     )}
     <div class="author-block__text">
