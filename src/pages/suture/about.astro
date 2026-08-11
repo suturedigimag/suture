@@ -2,9 +2,12 @@
 export const prerender = false;
 
 import PageLayout from '../../layouts/PageLayout.astro';
-import { getAboutMembers } from '../../lib/cms';
+import { getAboutMembers, getDesignTeamMembers, getPhotoTeamMembers } from '../../lib/cms';
+import InstagramWall from '../../components/InstagramWall.astro';
 
-const members = await getAboutMembers();
+const boardMembers = await getAboutMembers();
+const designMembers = await getDesignTeamMembers();
+const photoMembers = await getPhotoTeamMembers();
 ---
 
 <PageLayout
@@ -59,7 +62,7 @@ const members = await getAboutMembers();
     </div>
 
     <!-- ── Our Board Section ────────────────────────────────────── -->
-    {members.length > 0 && (
+    {boardMembers.length > 0 && (
       <section class="about-board section-py" id="board">
         <div class="container">
           <div class="about-board__header" data-reveal>
@@ -69,17 +72,98 @@ const members = await getAboutMembers();
           </div>
 
           <div class="about-board__grid">
-            {members.map((member, i) => (
+            {boardMembers.map((member, i) => (
               <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
-                {member.photo && (
-                  <div class="about-board__card-photo-wrap">
+                <div class="about-board__card-photo-wrap">
+                  {member.photo ? (
                     <img src={member.photo} alt={member.name} class="about-board__card-photo" loading="lazy" />
-                  </div>
-                )}
+                  ) : (
+                    <div class="about-board__card-photo-fallback">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 <div class="about-board__card-content">
                   <h3 class="about-board__card-name">{member.name}</h3>
                   <p class="about-board__card-role">{member.role}</p>
-                  <p class="about-board__card-bio">{member.bio}</p>
+                  {member.bio && <p class="about-board__card-bio">{member.bio}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ── Design Team Section ──────────────────────────────────── -->
+    {designMembers.length > 0 && (
+      <section class="about-board section-py" id="design-team" style="border-top: none;">
+        <div class="container">
+          <div class="about-board__header" data-reveal>
+            <p class="eyebrow">Creative Direction</p>
+            <h2 class="about-board__title">Design Team</h2>
+            <p class="about-board__sub">Crafting the visual identity, typography, and layout of The Suture.</p>
+          </div>
+
+          <div class="about-board__grid">
+            {designMembers.map((member, i) => (
+              <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
+                <div class="about-board__card-photo-wrap">
+                  {member.photo ? (
+                    <img src={member.photo} alt={member.name} class="about-board__card-photo" loading="lazy" />
+                  ) : (
+                    <div class="about-board__card-photo-fallback">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div class="about-board__card-content">
+                  <h3 class="about-board__card-name">{member.name}</h3>
+                  <p class="about-board__card-role">{member.role}</p>
+                  {member.bio && <p class="about-board__card-bio">{member.bio}</p>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ── Photo Team Section ───────────────────────────────────── -->
+    {photoMembers.length > 0 && (
+      <section class="about-board section-py" id="photo-team" style="border-top: none;">
+        <div class="container">
+          <div class="about-board__header" data-reveal>
+            <p class="eyebrow">Visual Storytelling</p>
+            <h2 class="about-board__title">Photo Team</h2>
+            <p class="about-board__sub">Capturing moments, imagery, and visual perspectives across campus and medicine.</p>
+          </div>
+
+          <div class="about-board__grid">
+            {photoMembers.map((member, i) => (
+              <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
+                <div class="about-board__card-photo-wrap">
+                  {member.photo ? (
+                    <img src={member.photo} alt={member.name} class="about-board__card-photo" loading="lazy" />
+                  ) : (
+                    <div class="about-board__card-photo-fallback">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div class="about-board__card-content">
+                  <h3 class="about-board__card-name">{member.name}</h3>
+                  <p class="about-board__card-role">{member.role}</p>
+                  {member.bio && <p class="about-board__card-bio">{member.bio}</p>}
                 </div>
               </div>
             ))}
@@ -90,22 +174,7 @@ const members = await getAboutMembers();
 
     <!-- ── Instagram Wall ───────────────────────────────────────── -->
     <section class="lc-instagram section-py" id="instagram" aria-labelledby="instagram-heading">
-      <div class="container text-center">
-        <div class="lc-instagram__inner" data-reveal>
-          <p class="eyebrow" style="margin-bottom: var(--space-4);">Instagram Feed</p>
-          <h2 class="lc-instagram__title" id="instagram-heading" style="margin-bottom: var(--space-10); font-family: var(--font-serif); font-size: var(--fs-xl); font-weight: 700; color: var(--color-text-primary);">Follow Us On Instagram</h2>
-          <div class="lc-instagram__widget-wrap" style="max-width: 1200px; margin: 0 auto; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface-hover); padding: var(--space-4); border: 1px solid var(--color-border);">
-            <behold-widget feed-id="dyDOswbye7ZO7FHg57yE"></behold-widget>
-            <script>
-              (() => {
-                if(window.__bhldScript)return;window.__bhldScript=true;
-                const d=document,s=d.createElement("script");s.type="module";
-                s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
-              })();
-            </script>
-          </div>
-        </div>
-      </div>
+    <InstagramWall />
     </section>
 
   </div>
@@ -211,13 +280,14 @@ const members = await getAboutMembers();
 
   .about-board__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: var(--space-8);
   }
 
   .about-board__card {
     display: flex;
     flex-direction: column;
+    height: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -236,6 +306,17 @@ const members = await getAboutMembers();
     overflow: hidden;
     background: var(--color-surface-hover);
     border-bottom: 1px solid var(--color-border);
+    position: relative;
+  }
+
+  .about-board__card-photo-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-hover);
+    color: var(--color-text-tertiary);
   }
 
   .about-board__card-photo {

@@ -44,8 +44,10 @@ export const COLLECTION_IDS = {
   photography:           'Photography',
   poetry:                'poetry',
 
-  // About Us
+  // About Us & Team collections
   aboutUs:               'AboutUs',
+  designTeam:            'DesignTeam',
+  photoTeam:             'PhotoTeam',
 
   // Events
   events:                'Events',
@@ -113,6 +115,9 @@ const CANDIDATE_COLLECTION_IDS: Record<string, string[]> = {
   'CreativeWriting': ['CreativeWriting', 'CreativeWritings'],
   'Photography': ['Photography', 'Photographies'],
   'poetry': ['poetry', 'Poetry', 'Poetries'],
+  'AboutUs': ['AboutUs', 'About', 'Board', 'OurBoard', 'Team'],
+  'DesignTeam': ['DesignTeam', 'Design_Team', 'Design', 'Designers', 'DesignTeamCollection'],
+  'PhotoTeam': ['PhotoTeam', 'Photo_Team', 'Photo', 'Photographers', 'PhotographyTeam', 'PhotoTeamCollection', 'PhotosTeam', 'Phototeam'],
 };
 
 /**
@@ -269,7 +274,7 @@ export async function getAllArticleSlugs(
  */
 export async function getMostRecentArticle(): Promise<Article | null> {
   const allCollections = Object.entries(COLLECTION_IDS).filter(
-    ([key]) => key !== 'aboutUs' && key !== 'events' && key !== 'eventsAlt',
+    ([key]) => key !== 'aboutUs' && key !== 'designTeam' && key !== 'photoTeam' && key !== 'events' && key !== 'eventsAlt',
   );
 
   const fetches = allCollections.map(async ([, id]) => {
@@ -1128,7 +1133,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
   return body.nodes.map(renderNode).join('');
 }
 
-// ── About Us (Board Members) ──────────────────────────────────────
+// ── Team Members (Board, Design Team, Photo Team) ─────────────────
 export interface AboutMember {
   _id: string;
   name: string;
@@ -1137,67 +1142,106 @@ export interface AboutMember {
   photo?: string;
 }
 
-export async function getAboutMembers(): Promise<AboutMember[]> {
-  try {
-    const response = (await withTimeout(
-      wixClient.items
-        .query(COLLECTION_IDS.aboutUs)
-        .find(),
-      8000
-    )) as any;
-
-    if (response.items && response.items.length > 0) {
-      return response.items.map((item: any) => {
-        const data = item.data ? { ...item, ...item.data } : item;
-        const rawPhoto =
-          data.profilePicture ??
-          data.photo?.url ??
-          data.photo ??
-          data.image?.url ??
-          data.image ??
-          data.picture ??
-          data.avatar ??
-          undefined;
-
-        const rawBio =
-          data.bio ??
-          data.about ??
-          data.description ??
-          data.details ??
-          data.summary ??
-          data.longDescription ??
-          '';
-        const extractedBio = extractTextFromRichContent(rawBio);
-
-        const name =
-          data.fullName ??
-          data.name ??
-          data.memberName ??
-          data.personName ??
-          data.title ??
-          'Member';
-
-        const role =
-          data.role ??
-          data.position ??
-          data.designation ??
-          data.title ??
-          '';
-
-        return {
-          _id: item._id,
-          name,
-          role,
-          bio: extractedBio || (typeof rawBio === 'string' ? rawBio : ''),
-          photo: rawPhoto ? getWixImageUrl(rawPhoto) : undefined,
-        };
-      });
+function getManualSortVal(item: any): string | null {
+  const data = item.data ? { ...item, ...item.data } : item;
+  for (const key of Object.keys(data)) {
+    if (key.startsWith('_manualSort')) {
+      return String(data[key]);
     }
-    return [];
-  } catch (err) {
-    console.warn(`[CMS] Error fetching About Us members:`, err);
-    return [];
   }
+  return null;
+}
+
+export async function getTeamMembers(collectionId: string): Promise<AboutMember[]> {
+  const candidateIds = Array.from(new Set([collectionId, ...(CANDIDATE_COLLECTION_IDS[collectionId] || [])]));
+
+  for (const candidate of candidateIds) {
+    try {
+      const response = (await withTimeout(
+        wixClient.items
+          .query(candidate)
+          .find(),
+        8000
+      )) as any;
+
+      if (response?.items && response.items.length > 0) {
+        const sortedItems = [...response.items].sort((a: any, b: any) => {
+          const valA = getManualSortVal(a);
+          const valB = getManualSortVal(b);
+
+          if (valA !== null && valB !== null) {
+            if (valA < valB) return -1;
+            if (valA > valB) return 1;
+            return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
+          }
+          if (valA !== null) return -1;
+          if (valB !== null) return 1;
+          return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
+        });
+
+        return sortedItems.map((item: any) => {
+          const data = item.data ? { ...item, ...item.data } : item;
+          const rawPhoto =
+            data.profilePicture ??
+            data.photo?.url ??
+            data.photo ??
+            data.image?.url ??
+            data.image ??
+            data.picture ??
+            data.avatar ??
+            undefined;
+
+          const rawBio =
+            data.bio ??
+            data.about ??
+            data.description ??
+            data.details ??
+            data.summary ??
+            data.longDescription ??
+            '';
+          const extractedBio = extractTextFromRichContent(rawBio);
+
+          const name =
+            data.fullName ??
+            data.name ??
+            data.memberName ??
+            data.personName ??
+            data.title ??
+            'Member';
+
+          const role =
+            data.role ??
+            data.position ??
+            data.designation ??
+            data.title ??
+            '';
+
+          return {
+            _id: item._id,
+            name,
+            role,
+            bio: extractedBio || (typeof rawBio === 'string' ? rawBio : ''),
+            photo: rawPhoto ? getWixImageUrl(rawPhoto) : undefined,
+          };
+        });
+      }
+    } catch (err) {
+      console.warn(`[CMS] Error fetching team members from "${candidate}":`, err);
+    }
+  }
+  return [];
+}
+
+export async function getAboutMembers(): Promise<AboutMember[]> {
+  return getTeamMembers(COLLECTION_IDS.aboutUs);
+}
+
+export async function getDesignTeamMembers(): Promise<AboutMember[]> {
+  return getTeamMembers(COLLECTION_IDS.designTeam);
+}
+
+export async function getPhotoTeamMembers(): Promise<AboutMember[]> {
+  return getTeamMembers(COLLECTION_IDS.photoTeam);
 }
 
 // ── Article Photos Extraction Helper ────────────────────────────
