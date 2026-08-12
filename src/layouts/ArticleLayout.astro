@@ -713,98 +713,98 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     transform: scale(1.03);
   }
 
-  /* 3. Panorama Slideshow Preset */
-  .article-body :global(.article-gallery-panorama) {
-    margin-block: var(--space-8);
-    width: 100%;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: #0d0d0c;
-    box-shadow: var(--shadow-sm);
-    clear: both;
-  }
-  .article-body :global(.gallery-panorama-stage) {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 21 / 9;
-    min-height: 260px;
-    max-height: 460px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .article-body :global(.gallery-panorama-stage img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    margin: 0 !important;
-    cursor: pointer;
-  }
-
-  /* 4. Slider Track Preset */
+  /* 4. Slider Track Preset (Wix Pro Gallery Slider) */
   .article-body :global(.article-gallery-slider-wrap) {
     position: relative;
     margin-block: var(--space-8);
     width: 100%;
     clear: both;
+    border-radius: var(--radius-lg);
   }
+
   .article-body :global(.article-gallery-slider__track) {
     display: flex;
     gap: var(--space-4);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    padding-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .article-body :global(.article-gallery-slider__track::-webkit-scrollbar) {
+    display: none;
+  }
+
   .article-body :global(.article-gallery-slider__item) {
-    flex: 0 0 clamp(240px, 55vw, 380px);
+    flex: 0 0 clamp(260px, 60vw, 460px);
     scroll-snap-align: start;
     border-radius: var(--radius-md);
     overflow: hidden;
     margin: 0 !important;
-    background: var(--color-surface-hover);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
   }
+
+  .article-body :global(.slider-img-wrap) {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: var(--color-surface-hover);
+  }
+
   .article-body :global(.article-gallery-slider__item img) {
     width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
+    height: 100%;
     display: block;
     margin: 0 !important;
-    cursor: pointer;
+    cursor: zoom-in;
     transition: transform var(--dur-normal) var(--ease-out-expo);
   }
+
   .article-body :global(.article-gallery-slider__item:hover img) {
     transform: scale(1.03);
   }
-  .article-body :global(.slider-controls) {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-2);
-    margin-top: var(--space-3);
-  }
+
   .article-body :global(.slider-btn) {
-    width: 36px;
-    height: 36px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--color-surface-hover);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-primary);
-    font-size: 1.3rem;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 1.5rem;
     line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background var(--dur-fast), color var(--dur-fast);
+    z-index: 10;
+    transition: all var(--dur-fast) var(--ease-out-expo);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
+
   .article-body :global(.slider-btn:hover) {
-    background: var(--color-accent);
-    color: #ffffff;
-    border-color: var(--color-accent);
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-50%) scale(1.08);
+  }
+
+  .article-body :global(.slider-btn.prev) {
+    left: var(--space-3);
+  }
+
+  .article-body :global(.slider-btn.next) {
+    right: var(--space-3);
   }
 
   /* 5. Columns Preset */
@@ -947,92 +947,45 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   /* Dedicated Panoramic Gallery Preset */
   .article-body :global(.article-gallery-panorama) {
     margin-block: var(--space-8);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    box-shadow: var(--shadow-sm);
+    width: 100%;
+    clear: both;
   }
-  .article-body :global(.panorama-header) {
+
+  .article-body :global(.panorama-stack) {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-4);
-    padding-inline: var(--space-2);
+    flex-direction: column;
+    gap: var(--space-6);
+    width: 100%;
   }
-  .article-body :global(.panorama-badge) {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: var(--ls-wider);
-    color: var(--color-accent);
-  }
-  .article-body :global(.panorama-controls) {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-  .article-body :global(.panorama-nav-btn) {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--color-surface-hover);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.2rem;
-    transition: all var(--dur-fast);
-  }
-  .article-body :global(.panorama-nav-btn:hover) {
-    background: var(--color-accent);
-    color: #ffffff;
-    border-color: var(--color-accent);
-  }
-  .article-body :global(.panorama-track) {
-    display: flex;
-    gap: var(--space-4);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: thin;
-    padding-bottom: var(--space-2);
-  }
+
   .article-body :global(.article-gallery-panorama__item) {
-    flex: 0 0 90%;
-    max-width: 90%;
-    scroll-snap-align: center;
+    width: 100%;
     margin: 0 !important;
   }
-  @media (min-width: 768px) {
-    .article-body :global(.article-gallery-panorama__item) {
-      flex: 0 0 80%;
-      max-width: 80%;
-    }
-  }
+
   .article-body :global(.panorama-img-wrap) {
     width: 100%;
-    aspect-ratio: 21 / 9;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-surface-hover);
     border: 1px solid var(--color-border);
     position: relative;
+    box-shadow: var(--shadow-sm);
   }
+
   .article-body :global(.panorama-img-wrap img) {
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: 680px;
     object-fit: cover;
+    display: block;
     margin: 0 !important;
     transition: transform var(--dur-normal) var(--ease-out-expo);
     cursor: zoom-in;
   }
+
   .article-body :global(.panorama-img-wrap img:hover) {
-    transform: scale(1.03);
+    transform: scale(1.015);
   }
 
   /* 3. Masonry Preset */

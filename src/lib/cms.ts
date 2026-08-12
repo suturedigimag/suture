@@ -802,7 +802,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         } else if (widthSize === 'MEDIUM') {
           alignClass += ' size-medium';
           figureStyles.push('width: 580px; max-width: 100%;');
-        } else if (widthSize === 'FULL_WIDTH' || alignment === 'full_width') {
+        } else if (widthSize === 'FULL_WIDTH' || widthSize === 'PANORAMA' || alignment === 'full_width' || alignment === 'full' || alignment === 'panorama') {
           alignClass = 'align-full-width';
         } else if (naturalWidth && (widthSize === 'CONTENT' || widthSize === 'ORIGINAL')) {
           figureStyles.push(`max-width: ${naturalWidth}px; width: 100%;`);
@@ -903,7 +903,7 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
           `;
         }
 
-        // Mode 2: Dedicated Panoramic Gallery Layout (21:9 Widescreen Filmstrip)
+        // Mode 2: Panoramic Gallery Layout
         if (layoutType === 'PANORAMA' || layoutType === 'SLIDESHOW_PANORAMA') {
           const itemsHtml = parsedItems
             .map(
@@ -919,41 +919,42 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
             .join('');
 
           return `
-            <div class="article-gallery-panorama ${alignClass}" data-gallery-panorama>
-              <div class="panorama-header">
-                <span class="panorama-badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="12" x="3" y="6" rx="2"/><path d="M3 12h18"/></svg>
-                  <span>Panoramic Gallery</span>
-                </span>
-                ${
-                  parsedItems.length > 1
-                    ? `
-                  <div class="panorama-controls">
-                    <button type="button" class="panorama-nav-btn prev" aria-label="Scroll panorama left">‹</button>
-                    <button type="button" class="panorama-nav-btn next" aria-label="Scroll panorama right">›</button>
-                  </div>
-                `
-                    : ''
-                }
-              </div>
-              <div class="panorama-track">
+            <div class="article-gallery-panorama ${alignClass}">
+              <div class="panorama-stack">
                 ${itemsHtml}
               </div>
             </div>
           `;
         }
 
-        // Mode 3: Slider Track Preset
+        // Mode 3: Slider Track Preset (Wix Pro Gallery Slider)
         if (layoutType === 'SLIDER') {
           const itemsHtml = parsedItems
-            .map(
-              (p: any) => `
+            .map((p: any) => {
+              const itemRatio =
+                targetRatio && targetRatio > 0
+                  ? String(targetRatio)
+                  : p.width && p.height
+                  ? `${p.width} / ${p.height}`
+                  : '16 / 9';
+
+              const fitStyle =
+                cropMode === 'FIT'
+                  ? 'object-fit: contain; background: var(--color-surface-hover);'
+                  : 'object-fit: cover;';
+
+              const itemStyle = `${fitStyle} aspect-ratio: ${itemRatio}; width: 100%; height: 100%;`;
+              const wrapStyle = `aspect-ratio: ${itemRatio}; width: 100%;`;
+
+              return `
             <figure class="article-gallery-slider__item">
-              <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${imageStyle}" onerror="this.parentElement.style.display='none'" />
+              <div class="slider-img-wrap" style="${wrapStyle}">
+                <img src="${p.imgUrl}" alt="${escapeHtml(p.caption)}" data-lightbox-src="${p.imgUrl}" data-caption="${escapeHtml(p.caption)}" loading="lazy" style="${itemStyle}" onerror="this.parentElement.parentElement.style.display='none'" />
+              </div>
               ${p.caption ? `<figcaption class="article-gallery-caption">${escapeHtml(p.caption)}</figcaption>` : ''}
             </figure>
-          `
-            )
+          `;
+            })
             .join('');
 
           return `
@@ -964,10 +965,8 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
               ${
                 parsedItems.length > 1
                   ? `
-                <div class="slider-controls">
-                  <button type="button" class="slider-btn prev" aria-label="Scroll left">‹</button>
-                  <button type="button" class="slider-btn next" aria-label="Scroll right">›</button>
-                </div>
+                <button type="button" class="slider-btn prev" aria-label="Scroll left">‹</button>
+                <button type="button" class="slider-btn next" aria-label="Scroll right">›</button>
               `
                   : ''
               }
