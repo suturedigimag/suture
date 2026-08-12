@@ -17,7 +17,7 @@
     const width = 400;
     
     // Markers on the globe representing PSG IMSR's global medical scope
-    const markers = [
+    const markers: { location: [number, number]; size: number }[] = [
       { location: [11.0168, 76.9558], size: 0.1 },  // Coimbatore, India (PSG IMSR Root!)
       { location: [19.076, 72.8777], size: 0.06 },   // Mumbai
       { location: [40.7128, -74.006], size: 0.06 },  // New York City

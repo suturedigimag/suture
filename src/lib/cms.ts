@@ -756,19 +756,68 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         const imgUrl = resolveImageNodeSrc(node);
         if (!imgUrl) return '';
         const alt = node.imageData?.altText ?? node.imageData?.alt ?? node.altText ?? node.alt ?? '';
-        const caption = node.imageData?.caption ?? node.caption ?? node.title ?? '';
-        const figCaption = caption ? `<figcaption class="article-image-caption">${escapeHtml(caption)}</figcaption>` : '';
+        
+        // 1. Caption extraction (rich formatted caption in child node or string fallback)
+        let captionHtml = '';
+        if (Array.isArray(node.nodes) && node.nodes.length > 0) {
+          const captionNode = node.nodes.find((n: any) => n.type === 'CAPTION' || n.type === 'caption');
+          if (captionNode) {
+            captionHtml = (captionNode.nodes || []).map(renderNode).join('');
+          }
+        }
+        if (!captionHtml) {
+          const captionStr = node.imageData?.caption ?? node.caption ?? node.title ?? '';
+          if (captionStr) captionHtml = escapeHtml(captionStr);
+        }
+        const figCaption = captionHtml ? `<figcaption class="article-image-caption">${captionHtml}</figcaption>` : '';
 
-        // Custom alignment and sizing properties
-        const alignment = (node.containerData?.alignment ?? node.imageData?.alignment ?? node.alignment ?? 'CENTER').toLowerCase();
-        const widthSize = node.containerData?.width?.size ?? node.imageData?.displayMode ?? node.displayMode ?? '';
+        // 2. Container alignment & width properties
+        const containerData = node.imageData?.containerData ?? node.containerData ?? {};
+        const alignment = (containerData.alignment ?? node.imageData?.alignment ?? node.alignment ?? 'CENTER').toLowerCase();
+        const widthData = containerData.width ?? {};
+        const widthSize = String(widthData.size ?? node.imageData?.displayMode ?? node.displayMode ?? '').toUpperCase();
+        const customWidth = widthData.custom;
+        const textWrap = Boolean(containerData.textWrap ?? true);
+
+        // 3. Natural Image Dimensions
+        const naturalWidth = node.imageData?.image?.width ?? node.imageData?.width;
+        const naturalHeight = node.imageData?.image?.height ?? node.imageData?.height;
 
         let alignClass = `align-${alignment}`;
-        if (alignment === 'full_width' || widthSize === 'FULL_WIDTH') alignClass = 'align-full-width';
-        else if (widthSize === 'SMALL') alignClass += ' size-small';
-        else if (widthSize === 'MEDIUM') alignClass += ' size-medium';
+        const figureStyles: string[] = [];
+        const imgStyles: string[] = [];
 
-        return `<figure class="article-image ${alignClass}"><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(caption)}" loading="lazy" onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
+        if (textWrap && (alignment === 'left' || alignment === 'right')) {
+          alignClass += ' text-wrap';
+        }
+
+        // Custom width set in CMS editor (e.g. "304", "200", "50%")
+        if (customWidth !== undefined && customWidth !== null && customWidth !== '') {
+          const widthStr = String(customWidth).trim();
+          const parsedWidth = /^\d+$/.test(widthStr) ? `${widthStr}px` : widthStr;
+          figureStyles.push(`width: ${parsedWidth}; max-width: 100%;`);
+        } else if (widthSize === 'SMALL') {
+          alignClass += ' size-small';
+          figureStyles.push('width: 340px; max-width: 100%;');
+        } else if (widthSize === 'MEDIUM') {
+          alignClass += ' size-medium';
+          figureStyles.push('width: 580px; max-width: 100%;');
+        } else if (widthSize === 'FULL_WIDTH' || alignment === 'full_width') {
+          alignClass = 'align-full-width';
+        } else if (naturalWidth && (widthSize === 'CONTENT' || widthSize === 'ORIGINAL')) {
+          figureStyles.push(`max-width: ${naturalWidth}px; width: 100%;`);
+        }
+
+        if (naturalWidth && naturalHeight) {
+          imgStyles.push(`aspect-ratio: ${naturalWidth} / ${naturalHeight};`);
+        }
+
+        const figStyleAttr = figureStyles.length > 0 ? ` style="${figureStyles.join(' ')}"` : '';
+        const imgStyleAttr = imgStyles.length > 0 ? ` style="${imgStyles.join(' ')}"` : '';
+
+        const plainCaption = node.imageData?.caption ?? node.caption ?? node.title ?? alt;
+
+        return `<figure class="article-image ${alignClass}"${figStyleAttr}><img src="${imgUrl}" alt="${escapeHtml(alt)}" data-lightbox-src="${imgUrl}" data-caption="${escapeHtml(plainCaption)}" loading="lazy"${imgStyleAttr} onerror="this.parentElement.style.display='none'" />${figCaption}</figure>`;
       }
 
       case 'GALLERY':
