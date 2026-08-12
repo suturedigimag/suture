@@ -99,18 +99,18 @@ const photoMembers = await getPhotoTeamMembers();
       </section>
     )}
 
-    <!-- ── Design Team Section ──────────────────────────────────── -->
-    {designMembers.length > 0 && (
-      <section class="about-board section-py" id="design-team" style="border-top: none;">
+    <!-- ── Photo Team Section ───────────────────────────────────── -->
+    {photoMembers.length > 0 && (
+      <section class="about-board section-py" id="photo-team" style="border-top: none;">
         <div class="container">
           <div class="about-board__header" data-reveal>
-            <p class="eyebrow">Creative Direction</p>
-            <h2 class="about-board__title">Design Team</h2>
-            <p class="about-board__sub">Crafting the visual identity, typography, and layout of The Suture.</p>
+            <p class="eyebrow">Visual Storytelling</p>
+            <h2 class="about-board__title">Photo Team</h2>
+            <p class="about-board__sub">Capturing moments, imagery, and visual perspectives across campus and medicine.</p>
           </div>
 
           <div class="about-board__grid">
-            {designMembers.map((member, i) => (
+            {photoMembers.map((member, i) => (
               <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
                 <div class="about-board__card-photo-wrap">
                   {member.photo ? (
@@ -136,18 +136,18 @@ const photoMembers = await getPhotoTeamMembers();
       </section>
     )}
 
-    <!-- ── Photo Team Section ───────────────────────────────────── -->
-    {photoMembers.length > 0 && (
-      <section class="about-board section-py" id="photo-team" style="border-top: none;">
+    <!-- ── Design Team Section ──────────────────────────────────── -->
+    {designMembers.length > 0 && (
+      <section class="about-board section-py" id="design-team" style="border-top: none;">
         <div class="container">
           <div class="about-board__header" data-reveal>
-            <p class="eyebrow">Visual Storytelling</p>
-            <h2 class="about-board__title">Photo Team</h2>
-            <p class="about-board__sub">Capturing moments, imagery, and visual perspectives across campus and medicine.</p>
+            <p class="eyebrow">Creative Direction</p>
+            <h2 class="about-board__title">Design Team</h2>
+            <p class="about-board__sub">Crafting the visual identity, typography, and layout of The Suture.</p>
           </div>
 
           <div class="about-board__grid">
-            {photoMembers.map((member, i) => (
+            {designMembers.map((member, i) => (
               <div class="about-board__card" data-reveal data-delay={Math.min(i * 80, 400)}>
                 <div class="about-board__card-photo-wrap">
                   {member.photo ? (
