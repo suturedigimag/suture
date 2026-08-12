@@ -41,8 +41,8 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
 >
   <a href={href} class="editorial-card__link" aria-label={`Read: ${article.title}`}>
 
-    {/* Cover image (not rendered for Beyond The Books) */}
-    {article.coverImage && !['Artwork', 'CreativeWriting', 'Photography', 'poetry'].includes(article.collectionId || '') && (
+    {/* Cover image */}
+    {article.coverImage && (
       <div class="editorial-card__img-wrap">
         <Image
           src={article.coverImage}
