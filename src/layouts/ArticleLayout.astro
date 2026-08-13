@@ -95,8 +95,8 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
                 <Image
                   src={article.authorPhoto}
                   alt={article.author}
-                  width={64}
-                  height={64}
+                  width={300}
+                  height={300}
                   class="article-signature__photo"
                 />
               )}
@@ -1313,11 +1313,12 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   }
 
   .article-signature__photo {
-    width: 64px;
-    height: 64px;
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2.5px solid var(--color-border);
+    border: 3px solid var(--color-border);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   }
 
   .article-signature__meta {

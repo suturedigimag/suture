@@ -539,19 +539,33 @@ export async function getStaffQuotes(): Promise<StaffQuote[]> {
   }, 30_000); // 30s cache TTL so new CMS entries update dynamically
 }
 
-// Helper to convert wix:image:// URL to static.wixstatic.com URL
-function getWixImageUrl(wixUrl: string): string {
+// Helper to convert wix:image:// URL to high-resolution, crisp static.wixstatic.com URL
+function getWixImageUrl(wixUrl: string, targetW = 800, targetH = 800): string {
   if (!wixUrl) return '';
+
+  let mediaId = '';
   if (wixUrl.startsWith('wix:image://')) {
-    const match = wixUrl.match(/wix:image:\/\/v1\/([^\/]+)/);
+    const match = wixUrl.match(/wix:image:\/\/v1\/([^\/#]+)/);
     if (match && match[1]) {
-      return `https://static.wixstatic.com/media/${match[1]}`;
+      mediaId = match[1];
+    }
+  } else if (!wixUrl.includes('://') && !wixUrl.startsWith('/') && !wixUrl.startsWith('data:')) {
+    mediaId = wixUrl.split('/')[0].split('#')[0];
+  }
+
+  if (mediaId) {
+    return `https://static.wixstatic.com/media/${mediaId}/v1/fill/w_${targetW},h_${targetH},al_c,q_85/${mediaId}`;
+  }
+
+  // Unsplash / external images: request high quality parameters
+  if (wixUrl.includes('images.unsplash.com')) {
+    if (wixUrl.includes('w=')) {
+      return wixUrl.replace(/w=\d+/, 'w=800').replace(/q=\d+/, 'q=85');
+    } else {
+      return `${wixUrl}${wixUrl.includes('?') ? '&' : '?'}w=800&q=85`;
     }
   }
-  // Fallback: If it's a raw Wix media ID (e.g. "792dc3_de190bf...jpeg"), prepend the static media URL
-  if (!wixUrl.includes('://') && !wixUrl.startsWith('/') && !wixUrl.startsWith('data:')) {
-    return `https://static.wixstatic.com/media/${wixUrl}`;
-  }
+
   return wixUrl;
 }
 // Reverse map: collectionId → URL slug (built lazily from all three route maps)

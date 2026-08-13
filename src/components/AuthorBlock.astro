@@ -19,8 +19,8 @@ const { author, authorPhoto, date } = Astro.props;
         class="author-block__photo"
         loading="lazy"
         decoding="async"
-        width={40}
-        height={40}
+        width={160}
+        height={160}
       />
     )}
     <div class="author-block__text">
@@ -38,11 +38,12 @@ const { author, authorPhoto, date } = Astro.props;
   }
 
   .author-block__photo {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--color-border);
+    border: 2.5px solid var(--color-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     flex-shrink: 0;
   }
 
@@ -54,8 +55,8 @@ const { author, authorPhoto, date } = Astro.props;
 
   .author-block__name {
     font-family: var(--font-sans);
-    font-size: var(--fs-sm);
-    font-weight: 500;
+    font-size: var(--fs-base);
+    font-weight: 600;
     color: var(--color-text-primary);
   }
 

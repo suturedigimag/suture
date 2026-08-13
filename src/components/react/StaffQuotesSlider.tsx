@@ -283,11 +283,11 @@ export default function StaffQuotesSlider({
           align-items: stretch;
         }
 
-        /* Portrait Photo Column (28% - 30% Width) */
+        /* Portrait Photo Column (30% - 32% Width) */
         .staff-card__photo-col {
-          width: 28%;
-          min-width: 145px;
-          max-width: 180px;
+          width: 32%;
+          min-width: 175px;
+          max-width: 220px;
           flex-shrink: 0;
           display: flex;
         }
@@ -295,12 +295,12 @@ export default function StaffQuotesSlider({
         .staff-portrait {
           position: relative;
           width: 100%;
-          min-height: 190px;
+          min-height: 220px;
           height: 100%;
-          border-radius: 1.15rem;
+          border-radius: 1.25rem;
           overflow: hidden;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.16);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         .staff-portrait__img {
