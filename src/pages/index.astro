@@ -14,12 +14,14 @@ import axonConf from '../assets/images/axon_conference.jpg';
 import sportsFootball from '../assets/images/sports_football.jpg';
 import culturalDance from '../assets/images/cultural_dance.jpg';
 import '../styles/global.css';
-import { getEvents } from '../lib/cms';
+import { getEvents, getStaffQuotes } from '../lib/cms';
+import StaffQuotesSlider from '../components/react/StaffQuotesSlider';
 
 const title = 'PSG Lit Club | Coimbatore';
 const description = "It's PSGIMSR's very own Literature and Arts club!";
 
 const events = await getEvents(6);
+const staffQuotes = await getStaffQuotes();
 ---
 
 <!doctype html>
@@ -97,12 +99,9 @@ const events = await getEvents(6);
           It's PSGIMSR's very own Literature and Arts club! Nurturing writers, readers, and thinkers across medicine and beyond.
         </p>
 
-        <!-- Testimonial Quote in Hero -->
-        <div class="lc-hero__testimonial" data-hero-reveal="quote">
-          <blockquote class="lc-hero__blockquote">
-            "This is a wonderful initiative to bring the faculty and students together to exchange thoughts, ideas and talent. It's a refreshing glass of lemonade at the end of a hot day!"
-          </blockquote>
-          <cite class="lc-hero__author">— Dr. Subba Rao, Principal</cite>
+        <!-- Staff Quotes Slider in Hero (Connected to Wix CMS StaffQuotes) -->
+        <div data-hero-reveal="quote">
+          <StaffQuotesSlider quotes={staffQuotes} client:load />
         </div>
 
         <div class="lc-hero__actions" data-hero-reveal="cta">

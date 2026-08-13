@@ -49,6 +49,9 @@ export const COLLECTION_IDS = {
   designTeam:            'DesignTeam',
   photoTeam:             'PhotoTeam',
 
+  // Staff & Faculty Quotes
+  staffQuotes:           'StaffQuotes',
+
   // Events
   events:                'Events',
   eventsAlt:             'Event',
@@ -69,6 +72,14 @@ export interface Article {
   _createdDate: string;
   collectionId?: string;
   collectionSlug?: string;
+}
+
+export interface StaffQuote {
+  _id: string;
+  name: string;
+  title: string;
+  quote: string;
+  photo?: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -118,6 +129,7 @@ const CANDIDATE_COLLECTION_IDS: Record<string, string[]> = {
   'AboutUs': ['AboutUs', 'About', 'Board', 'OurBoard', 'Team'],
   'DesignTeam': ['DesignTeam', 'Design_Team', 'Design', 'Designers', 'DesignTeamCollection'],
   'PhotoTeam': ['PhotoTeam', 'Photo_Team', 'Photo', 'Photographers', 'PhotographyTeam', 'PhotoTeamCollection', 'PhotosTeam', 'Phototeam'],
+  'StaffQuotes': ['StaffQuotes', 'StaffQuote', 'FacultyQuotes', 'Quotes', 'Staff_Quotes'],
 };
 
 // ── Server-side Memory Cache for Blazing Fast Performance ────────
@@ -386,6 +398,145 @@ export async function getHomepageSections(limit = 3): Promise<{
   ].slice(0, limit * 2);
 
   return { sections, campusChronicles, beyondTheBooks };
+}
+
+function getFieldCaseInsensitive(data: any, ...fieldNames: string[]): any {
+  if (!data || typeof data !== 'object') return undefined;
+
+  // 1. Direct key check first
+  for (const name of fieldNames) {
+    if (data[name] !== undefined && data[name] !== null && data[name] !== '') {
+      return data[name];
+    }
+  }
+
+  // 2. Case-insensitive key check across all keys in data object
+  const dataKeys = Object.keys(data);
+  for (const name of fieldNames) {
+    const lowerName = name.toLowerCase();
+    const foundKey = dataKeys.find((k) => k.toLowerCase() === lowerName);
+    if (foundKey && data[foundKey] !== undefined && data[foundKey] !== null && data[foundKey] !== '') {
+      return data[foundKey];
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Fetch staff and faculty quotes from the StaffQuotes CMS collection.
+ * Automatically accommodates newer entries and updates on fetch with case-insensitive field matching.
+ */
+export async function getStaffQuotes(): Promise<StaffQuote[]> {
+  return getCached('staffQuotes', async () => {
+    const candidateIds = Array.from(new Set(['StaffQuotes', ...(CANDIDATE_COLLECTION_IDS['StaffQuotes'] || [])]));
+
+    for (const candidate of candidateIds) {
+      try {
+        const response = (await withTimeout(
+          wixClient.items
+            .query(candidate)
+            .limit(100)
+            .ascending('_createdDate')
+            .find(),
+          10000
+        )) as any;
+
+        if (response?.items && response.items.length > 0) {
+          const mapped = response.items
+            .map((item: any) => {
+              const data = item.data ? { ...item, ...item.data } : item;
+
+              // 1. Extract Quote
+              const rawQuote = getFieldCaseInsensitive(
+                data,
+                'quote', 'text', 'content', 'body', 'description', 'testimonial', 'message', 'statement', 'comment', 'quotes'
+              );
+
+              let quoteText = '';
+              if (typeof rawQuote === 'string') {
+                quoteText = rawQuote;
+              } else if (typeof rawQuote === 'object' && rawQuote?.nodes) {
+                try {
+                  quoteText = rawQuote.nodes
+                    .map((n: any) => n.nodes?.map((c: any) => c.text).join('') || n.text || '')
+                    .join(' ')
+                    .trim();
+                } catch {
+                  quoteText = '';
+                }
+              }
+
+              // 2. Extract Name & Primary Title
+              const rawName = getFieldCaseInsensitive(data, 'name', 'author', 'staffName', 'person', 'member', 'speaker');
+              const rawTitleField = getFieldCaseInsensitive(data, 'title', 'heading');
+
+              let nameStr = '';
+              if (rawName && typeof rawName === 'string') {
+                nameStr = rawName.trim();
+              } else if (rawTitleField && typeof rawTitleField === 'string') {
+                // If rawTitleField is short or quoteText already exists, rawTitleField is likely the person's name
+                nameStr = rawTitleField.trim();
+              }
+
+              // If quoteText is still empty and title field has a longer sentence, use title field as quote!
+              if (!quoteText && rawTitleField && typeof rawTitleField === 'string' && rawTitleField.length > 20) {
+                quoteText = rawTitleField.trim();
+              }
+
+              if (!nameStr) {
+                nameStr = 'Staff Member';
+              }
+
+              // 3. Extract Designation / Role / Position
+              const rawDesignation = getFieldCaseInsensitive(
+                data,
+                'designation', 'role', 'position', 'staffTitle', 'authorTitle', 'subtitle', 'department', 'jobTitle'
+              );
+
+              let titleStr = '';
+              if (rawDesignation && typeof rawDesignation === 'string') {
+                titleStr = rawDesignation.trim();
+              } else if (rawTitleField && typeof rawTitleField === 'string') {
+                if (rawTitleField.trim().toLowerCase() !== nameStr.toLowerCase() && rawTitleField !== quoteText) {
+                  titleStr = rawTitleField.trim();
+                }
+              }
+
+              if (titleStr.toLowerCase() === nameStr.toLowerCase()) {
+                titleStr = '';
+              }
+
+              // 4. Extract Photo
+              const rawPhoto = getFieldCaseInsensitive(
+                data,
+                'photo', 'image', 'authorPhoto', 'picture', 'avatar', 'media', 'coverImage', 'profilePhoto', 'profileImage'
+              );
+
+              const photoUrl = rawPhoto
+                ? getWixImageUrl(typeof rawPhoto === 'object' ? rawPhoto.url || rawPhoto.src || rawPhoto.id || '' : String(rawPhoto))
+                : null;
+
+              return {
+                _id: item._id || Math.random().toString(),
+                name: nameStr,
+                title: titleStr,
+                quote: quoteText.trim() || 'No quote provided.',
+                photo: photoUrl && photoUrl.trim() !== '' ? photoUrl : null,
+              };
+            })
+            .filter((q: StaffQuote) => q.quote && q.quote.trim() !== '' && q.quote !== 'No quote provided.');
+
+          if (mapped.length > 0) {
+            return mapped;
+          }
+        }
+      } catch (err) {
+        console.warn(`[CMS] Error fetching "${candidate}":`, err);
+      }
+    }
+    return [];
+  }, 30_000); // 30s cache TTL so new CMS entries update dynamically
 }
 
 // Helper to convert wix:image:// URL to static.wixstatic.com URL
