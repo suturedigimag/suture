@@ -5,7 +5,7 @@
  * Features: parallax scroll, fade-in on load, dark gradient overlay.
  */
 import { Image } from 'astro:assets';
-import { getArticleUrl, COLLECTION_NAMES, type Article } from '../lib/cms';
+import { getArticleUrl, getBylinePrefix, COLLECTION_NAMES, type Article } from '../lib/cms';
 
 interface Props {
   article: Article;
@@ -24,6 +24,7 @@ const sectionLabel = article.collectionSlug
   ? (COLLECTION_NAMES[article.collectionSlug] ?? article.collectionSlug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()))
   : (article.collectionId?.replace(/([a-z])([A-Z])/g, '$1 $2') ?? 'The Suture');
 
+const bylinePrefix = getBylinePrefix(sectionLabel || article.collectionSlug);
 const articleHref = getArticleUrl(article);
 ---
 
@@ -59,7 +60,7 @@ const articleHref = getArticleUrl(article);
 
       {article.author && (
         <p class="hero__byline" data-hero-reveal="byline">
-          By {article.author}
+          {bylinePrefix} {article.author}
           <span class="hero__byline-sep" aria-hidden="true">·</span>
           <time datetime={article._createdDate}>{formattedDate}</time>
         </p>

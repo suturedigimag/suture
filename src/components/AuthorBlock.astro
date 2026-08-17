@@ -5,9 +5,10 @@ interface Props {
   author?: string;
   authorPhoto?: string;
   date?: string;
+  bylinePrefix?: string;
 }
 
-const { author, authorPhoto, date } = Astro.props;
+const { author, authorPhoto, date, bylinePrefix } = Astro.props;
 ---
 
 {(author || date) && (
@@ -24,7 +25,11 @@ const { author, authorPhoto, date } = Astro.props;
       />
     )}
     <div class="author-block__text">
-      {author && <span class="author-block__name">{author}</span>}
+      {author && (
+        <span class="author-block__name">
+          {bylinePrefix ? `${bylinePrefix} ${author}` : author}
+        </span>
+      )}
       {date && <span class="author-block__date">{date}</span>}
     </div>
   </div>

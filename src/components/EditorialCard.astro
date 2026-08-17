@@ -7,6 +7,7 @@
  */
 import { Image } from 'astro:assets';
 import type { Article } from '../lib/cms';
+import { getBylinePrefix } from '../lib/cms';
 
 interface Props {
   article: Article;
@@ -23,6 +24,8 @@ const {
   sectionLabel,
   delay = 0,
 } = Astro.props;
+
+const bylinePrefix = getBylinePrefix(sectionLabel || article.collectionSlug);
 
 const formattedDate = new Intl.DateTimeFormat('en-IN', {
   day: 'numeric',
@@ -65,7 +68,7 @@ const formattedDate = new Intl.DateTimeFormat('en-IN', {
 
       <div class="editorial-card__meta">
         {article.author && (
-          <span class="editorial-card__author">{article.author}</span>
+          <span class="editorial-card__author">{bylinePrefix} {article.author}</span>
         )}
         {article.author && <span class="editorial-card__sep" aria-hidden="true">·</span>}
         <time class="editorial-card__date" datetime={article._createdDate}>

@@ -5,7 +5,7 @@
  * Used on section landings and as an enhanced homepage block.
  */
 import { Image } from 'astro:assets';
-import { getArticleUrl, type Article } from '../lib/cms';
+import { getArticleUrl, getBylinePrefix, type Article } from '../lib/cms';
 
 interface Props {
   articles: Article[];
@@ -39,7 +39,7 @@ const fmt = (d: string) =>
         {sectionLabel && <p class="eyebrow">{sectionLabel}</p>}
         <h3 class="mag-grid__hero-title">{hero.title}</h3>
         {hero.author && (
-          <p class="mag-grid__meta">{hero.author} · <time datetime={hero._createdDate}>{fmt(hero._createdDate)}</time></p>
+          <p class="mag-grid__meta">{getBylinePrefix(sectionLabel || hero.collectionSlug)} {hero.author} · <time datetime={hero._createdDate}>{fmt(hero._createdDate)}</time></p>
         )}
       </div>
     </a>
@@ -60,7 +60,7 @@ const fmt = (d: string) =>
             )}
             <div class="mag-grid__secondary-body">
               <h4 class="mag-grid__secondary-title">{article.title}</h4>
-              {article.author && <p class="mag-grid__meta">{article.author} · <time datetime={article._createdDate}>{fmt(article._createdDate)}</time></p>}
+              {article.author && <p class="mag-grid__meta">{getBylinePrefix(sectionLabel || article.collectionSlug)} {article.author} · <time datetime={article._createdDate}>{fmt(article._createdDate)}</time></p>}
             </div>
           </a>
         )
@@ -76,7 +76,7 @@ const fmt = (d: string) =>
             <li>
               <a href={getArticleUrl(article)} class="mag-grid__sidebar-item">
                 <span class="mag-grid__sidebar-title">{article.title}</span>
-                {article.author && <span class="mag-grid__meta">{article.author}</span>}
+                {article.author && <span class="mag-grid__meta">{getBylinePrefix(sectionLabel || article.collectionSlug)} {article.author}</span>}
               </a>
             </li>
           ))}

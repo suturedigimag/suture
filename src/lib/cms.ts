@@ -746,6 +746,46 @@ export const COLLECTION_NAMES: Record<string, string> = {
   'poetry':                'Poetry',
 };
 
+/**
+ * Returns the editorial byline label for article detail page signature blocks.
+ * - Artwork / Art / Drawings / Paintings / Sketches -> "Drawn By"
+ * - Photography / Photos / Camera / Shutter -> "Photographed By"
+ * - Creative Writing / Stories / Essays / Default -> "Written By"
+ */
+export function getBylineLabel(categoryOrSection?: string): string {
+  const str = (categoryOrSection || '').toLowerCase();
+
+  if (str.includes('art') || str.includes('draw') || str.includes('sketch') || str.includes('paint') || str.includes('illustration')) {
+    return 'Drawn By';
+  }
+
+  if (str.includes('photo') || str.includes('camera') || str.includes('shutter') || str.includes('picture')) {
+    return 'Photographed By';
+  }
+
+  return 'Written By';
+}
+
+/**
+ * Returns the byline prefix for card meta and hero headers (e.g. "Drawn by", "Photographed by", "By").
+ * - Artwork / Art / Drawings -> "Drawn by"
+ * - Photography / Photos -> "Photographed by"
+ * - Default -> "By" (or "Written by" if explicit)
+ */
+export function getBylinePrefix(categoryOrSection?: string, options?: { explicitWrite?: boolean }): string {
+  const str = (categoryOrSection || '').toLowerCase();
+
+  if (str.includes('art') || str.includes('draw') || str.includes('sketch') || str.includes('paint') || str.includes('illustration')) {
+    return 'Drawn by';
+  }
+
+  if (str.includes('photo') || str.includes('camera') || str.includes('shutter') || str.includes('picture')) {
+    return 'Photographed by';
+  }
+
+  return options?.explicitWrite ? 'Written by' : 'By';
+}
+
 function extractWixImageSrc(srcObj: any): string {
   if (!srcObj) return '';
   if (typeof srcObj === 'string') return srcObj;
