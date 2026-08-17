@@ -352,6 +352,7 @@ export default function StaffQuotesSlider({
         /* Right Content Column (70% - 72% Width) */
         .staff-card__main-col {
           flex: 1;
+          min-width: 0;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
@@ -429,6 +430,7 @@ export default function StaffQuotesSlider({
           display: flex;
           flex-direction: column;
           gap: 0.2rem;
+          min-width: 0;
         }
 
         .staff-card__name {
@@ -502,18 +504,79 @@ export default function StaffQuotesSlider({
           background: var(--color-accent, #C1121F);
         }
 
-        /* Mobile Layout */
-        @media (max-width: 580px) {
+        /* Mobile Layout Optimization */
+        @media (max-width: 640px) {
+          .staff-card {
+            padding: 1.15rem;
+          }
           .staff-card__body {
-            flex-direction: column;
+            flex-direction: row;
+            gap: 0.85rem;
+            align-items: flex-start;
           }
           .staff-card__photo-col {
-            width: 100%;
-            max-width: 100%;
+            width: 100px;
+            min-width: 100px;
+            max-width: 100px;
           }
           .staff-portrait {
-            height: 180px;
-            min-height: 180px;
+            width: 100px;
+            height: 130px;
+            min-height: 130px;
+            aspect-ratio: 3 / 4;
+            border-radius: 0.875rem;
+          }
+          .staff-portrait__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+          }
+          .staff-portrait__fallback {
+            min-height: 130px;
+            padding: 0.5rem;
+            gap: 0.35rem;
+          }
+          .staff-portrait__initials {
+            font-size: 1.3rem;
+          }
+          .staff-card__content {
+            min-height: auto;
+            margin-bottom: 0.65rem;
+          }
+          .staff-card__quote {
+            font-size: 0.925rem;
+            line-height: 1.5;
+          }
+          .staff-card__footer {
+            padding-top: 0.65rem;
+            gap: 0.5rem;
+          }
+          .staff-card__name {
+            font-size: 0.9rem;
+          }
+          .staff-card__title {
+            font-size: 0.75rem;
+          }
+          .staff-card__nav-btn {
+            width: 30px;
+            height: 30px;
+          }
+        }
+
+        @media (max-width: 440px) {
+          .staff-card__photo-col {
+            width: 84px;
+            min-width: 84px;
+            max-width: 84px;
+          }
+          .staff-portrait {
+            width: 84px;
+            height: 112px;
+            min-height: 112px;
+          }
+          .staff-portrait__initials {
+            font-size: 1.15rem;
           }
         }
       `}</style>
