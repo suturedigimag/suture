@@ -204,14 +204,15 @@ const photoMembers = await getPhotoTeamMembers();
   }
 
   .about-page__lead {
-    font-family: var(--font-serif);
-    font-size: var(--fs-xl);
-    line-height: var(--lh-snug);
-    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-secondary);
     font-weight: 400;
   }
 
   .about-page__body p {
+    font-family: var(--font-sans);
     font-size: var(--fs-md);
     line-height: var(--lh-relaxed);
     color: var(--color-text-secondary);
@@ -234,7 +235,8 @@ const photoMembers = await getPhotoTeamMembers();
   }
 
   .about-page__sections li {
-    font-size: var(--fs-base);
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
     color: var(--color-text-secondary);
     line-height: var(--lh-relaxed);
   }
@@ -243,7 +245,7 @@ const photoMembers = await getPhotoTeamMembers();
     display: inline-flex;
     align-items: center;
     font-family: var(--font-sans);
-    font-size: var(--fs-base);
+    font-size: var(--fs-md);
     font-weight: 500;
     color: var(--color-accent);
     transition: gap var(--dur-fast);
@@ -273,10 +275,11 @@ const photoMembers = await getPhotoTeamMembers();
 
   .about-board__sub {
     font-family: var(--font-sans);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
     color: var(--color-text-secondary);
     max-width: 500px;
     margin-inline: auto;
+    line-height: var(--lh-relaxed);
   }
 
   .about-board__grid {
@@ -356,7 +359,7 @@ const photoMembers = await getPhotoTeamMembers();
 
   .about-board__card-bio {
     font-family: var(--font-sans);
-    font-size: var(--fs-sm);
+    font-size: var(--fs-md);
     color: var(--color-text-secondary);
     line-height: var(--lh-relaxed);
   }
