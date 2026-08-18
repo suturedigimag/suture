@@ -25,7 +25,7 @@ const {
   delay = 0,
 } = Astro.props;
 
-const bylinePrefix = getBylinePrefix(sectionLabel || article.collectionSlug);
+const bylinePrefix = getBylinePrefix(article.collectionSlug || sectionLabel);
 
 const formattedDate = new Intl.DateTimeFormat('en-IN', {
   day: 'numeric',

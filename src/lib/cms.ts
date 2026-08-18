@@ -539,8 +539,8 @@ export async function getStaffQuotes(): Promise<StaffQuote[]> {
   }, 30_000); // 30s cache TTL so new CMS entries update dynamically
 }
 
-// Helper to convert wix:image:// URL to high-resolution, crisp static.wixstatic.com URL
-function getWixImageUrl(wixUrl: string, targetW = 800, targetH = 800): string {
+// Helper to convert wix:image:// or cropped Wix URLs to high-resolution, uncropped original static.wixstatic.com URLs
+function getWixImageUrl(wixUrl: string): string {
   if (!wixUrl) return '';
 
   let mediaId = '';
@@ -549,20 +549,25 @@ function getWixImageUrl(wixUrl: string, targetW = 800, targetH = 800): string {
     if (match && match[1]) {
       mediaId = match[1];
     }
+  } else if (wixUrl.includes('static.wixstatic.com/media/')) {
+    const match = wixUrl.match(/static\.wixstatic\.com\/media\/([^\/#\?]+)/);
+    if (match && match[1]) {
+      mediaId = match[1];
+    }
   } else if (!wixUrl.includes('://') && !wixUrl.startsWith('/') && !wixUrl.startsWith('data:')) {
     mediaId = wixUrl.split('/')[0].split('#')[0];
   }
 
   if (mediaId) {
-    return `https://static.wixstatic.com/media/${mediaId}/v1/fill/w_${targetW},h_${targetH},al_c,q_85/${mediaId}`;
+    return `https://static.wixstatic.com/media/${mediaId}`;
   }
 
   // Unsplash / external images: request high quality parameters
   if (wixUrl.includes('images.unsplash.com')) {
     if (wixUrl.includes('w=')) {
-      return wixUrl.replace(/w=\d+/, 'w=800').replace(/q=\d+/, 'q=85');
+      return wixUrl.replace(/w=\d+/, 'w=1600').replace(/q=\d+/, 'q=90');
     } else {
-      return `${wixUrl}${wixUrl.includes('?') ? '&' : '?'}w=800&q=85`;
+      return `${wixUrl}${wixUrl.includes('?') ? '&' : '?'}w=1600&q=90`;
     }
   }
 
@@ -746,6 +751,19 @@ export const COLLECTION_NAMES: Record<string, string> = {
   'poetry':                'Poetry',
 };
 
+export function isArtCategory(categoryOrSection?: string): boolean {
+  if (!categoryOrSection) return false;
+  const str = categoryOrSection.toLowerCase().replace(/[-_]/g, ' ').trim();
+  if (str.includes('department') || str.includes('article')) return false;
+  return /\b(art|artwork|artworks|draw|drawing|drawings|drawn|sketch|sketches|paint|painting|paintings|illustration|illustrations)\b/i.test(str);
+}
+
+export function isPhotoCategory(categoryOrSection?: string): boolean {
+  if (!categoryOrSection) return false;
+  const str = categoryOrSection.toLowerCase().replace(/[-_]/g, ' ').trim();
+  return /\b(photo|photos|photography|photographer|camera|shutter|picture|pictures)\b/i.test(str) || str.includes('photo');
+}
+
 /**
  * Returns the editorial byline label for article detail page signature blocks.
  * - Artwork / Art / Drawings / Paintings / Sketches -> "Drawn By"
@@ -753,13 +771,11 @@ export const COLLECTION_NAMES: Record<string, string> = {
  * - Creative Writing / Stories / Essays / Default -> "Written By"
  */
 export function getBylineLabel(categoryOrSection?: string): string {
-  const str = (categoryOrSection || '').toLowerCase();
-
-  if (str.includes('art') || str.includes('draw') || str.includes('sketch') || str.includes('paint') || str.includes('illustration')) {
+  if (isArtCategory(categoryOrSection)) {
     return 'Drawn By';
   }
 
-  if (str.includes('photo') || str.includes('camera') || str.includes('shutter') || str.includes('picture')) {
+  if (isPhotoCategory(categoryOrSection)) {
     return 'Photographed By';
   }
 
@@ -773,13 +789,11 @@ export function getBylineLabel(categoryOrSection?: string): string {
  * - Default -> "By" (or "Written by" if explicit)
  */
 export function getBylinePrefix(categoryOrSection?: string, options?: { explicitWrite?: boolean }): string {
-  const str = (categoryOrSection || '').toLowerCase();
-
-  if (str.includes('art') || str.includes('draw') || str.includes('sketch') || str.includes('paint') || str.includes('illustration')) {
+  if (isArtCategory(categoryOrSection)) {
     return 'Drawn by';
   }
 
-  if (str.includes('photo') || str.includes('camera') || str.includes('shutter') || str.includes('picture')) {
+  if (isPhotoCategory(categoryOrSection)) {
     return 'Photographed by';
   }
 
@@ -1170,8 +1184,12 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
               ${
                 parsedItems.length > 1
                   ? `
-                <button type="button" class="slider-btn prev" aria-label="Scroll left">‹</button>
-                <button type="button" class="slider-btn next" aria-label="Scroll right">›</button>
+                <button type="button" class="slider-btn prev" aria-label="Scroll left">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button type="button" class="slider-btn next" aria-label="Scroll right">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
               `
                   : ''
               }
@@ -1217,8 +1235,12 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
                 ${
                   parsedItems.length > 1
                     ? `
-                  <button type="button" class="gallery-nav-btn prev" aria-label="Previous image">‹</button>
-                  <button type="button" class="gallery-nav-btn next" aria-label="Next image">›</button>
+                  <button type="button" class="gallery-nav-btn prev" aria-label="Previous image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                  </button>
+                  <button type="button" class="gallery-nav-btn next" aria-label="Next image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
                   <div class="gallery-counter"><span class="current-idx">1</span> / ${parsedItems.length}</div>
                 `
                     : ''

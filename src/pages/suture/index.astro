@@ -9,7 +9,6 @@ import PageLayout from '../../layouts/PageLayout.astro';
 import SutureHero from '../../components/SutureHero.astro';
 import FeaturedStory from '../../components/FeaturedStory.astro';
 import MagazineGrid from '../../components/MagazineGrid.astro';
-import SectionStrip from '../../components/SectionStrip.astro';
 import SectionTicker from '../../components/SectionTicker.astro';
 import InstagramWall from '../../components/InstagramWall.astro';
 import SubmissionCTA from '../../components/SubmissionCTA.astro';
@@ -25,30 +24,35 @@ const [
   heroArticle,
   sectionsAllRaw,
   campusChroniclesAllRaw,
-  worldHealth,
+  worldHealthRaw,
   beyondTheBooksAllRaw,
 ] = await Promise.all([
   getMostRecentArticle(),
-  // Sections — clinical + research mix
+  // Clinicals — clinical medicine, diagnostics, department spotlight, wellness & research
   Promise.all([
     getArticles(COLLECTION_IDS.clinicalCaseCorner, 6),
     getArticles(COLLECTION_IDS.decryptAndDiagnose, 2),
     getArticles(COLLECTION_IDS.departmentSpotlight, 2),
-  ]).then(([a, b, c]) => [...a, ...b, ...c]),
+    getArticles(COLLECTION_IDS.healersWellness, 2),
+    getArticles(COLLECTION_IDS.researchResource, 2),
+  ]).then(([a, b, c, d, e]) => [...a, ...b, ...c, ...d, ...e]),
   // Campus Chronicles
   Promise.all([
     getArticles(COLLECTION_IDS.clubs, 3),
     getArticles(COLLECTION_IDS.cultural, 3),
     getArticles(COLLECTION_IDS.sports, 2),
-  ]).then(([a, b, c]) => [...a, ...b, ...c]),
-  // World Health standalone strip
-  getArticles(COLLECTION_IDS.worldHealth, 3),
+    getArticles(COLLECTION_IDS.ncc, 2),
+    getArticles(COLLECTION_IDS.studentAchievements, 2),
+    getArticles(COLLECTION_IDS.yrc, 2),
+  ]).then(([a, b, c, d, e, f]) => [...a, ...b, ...c, ...d, ...e, ...f]),
+  // World Health
+  getArticles(COLLECTION_IDS.worldHealth, 6),
   // Beyond The Books
   Promise.all([
-    getArticles(COLLECTION_IDS.artwork, 2),
-    getArticles(COLLECTION_IDS.creativeWriting, 2),
-    getArticles(COLLECTION_IDS.photography, 2),
-    getArticles(COLLECTION_IDS.poetry, 2),
+    getArticles(COLLECTION_IDS.artwork, 3),
+    getArticles(COLLECTION_IDS.creativeWriting, 3),
+    getArticles(COLLECTION_IDS.photography, 3),
+    getArticles(COLLECTION_IDS.poetry, 3),
   ]).then(([a, b, c, d]) => [...a, ...b, ...c, ...d]),
 ]);
 
@@ -61,12 +65,16 @@ const campusChroniclesAll = [...campusChroniclesAllRaw].sort(
   (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
 );
 
+const worldHealth = [...worldHealthRaw].sort(
+  (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
+);
+
 const beyondTheBooksAll = [...beyondTheBooksAllRaw].sort(
   (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
 );
 
 // Featured = second article overall (hero takes first)
-const allRecent = [...sectionsAll, ...campusChroniclesAll].sort(
+const allRecent = [...sectionsAll, ...campusChroniclesAll, ...worldHealth, ...beyondTheBooksAll].sort(
   (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
 );
 const featuredArticle = allRecent.find(
@@ -94,14 +102,14 @@ const featuredArticle = allRecent.find(
   <!-- 3. Section ticker -->
   <SectionTicker />
 
-  <!-- 4. Sections — Magazine Grid -->
+  <!-- 4. Clinicals — Magazine Grid -->
   {sectionsAll.length > 0 && (
-    <section class="home-section section-py" aria-labelledby="sections-heading">
+    <section class="home-section section-py" aria-labelledby="clinicals-heading">
       <div class="container">
         <div class="home-section__header" data-reveal>
           <div class="home-section__title-block">
-            <h2 class="home-section__title" id="sections-heading">Sections</h2>
-            <p class="home-section__description">In-depth writing on clinical medicine, public health, research, and wellbeing.</p>
+            <h2 class="home-section__title" id="clinicals-heading">Clinicals</h2>
+            <p class="home-section__description">In-depth writing on clinical medicine, diagnostic puzzles, wellness, and research.</p>
           </div>
           <a href="/suture/sections" class="home-section__view-all">
             View All
@@ -109,39 +117,69 @@ const featuredArticle = allRecent.find(
           </a>
         </div>
         <hr class="divider" />
-        <MagazineGrid articles={sectionsAll} sectionLabel="Sections" />
+        <MagazineGrid articles={sectionsAll} sectionLabel="Clinicals" />
       </div>
     </section>
   )}
 
-  <!-- 5. Campus Chronicles strip -->
+  <!-- 5. Campus Chronicles — Magazine Grid -->
   {campusChroniclesAll.length > 0 && (
-    <SectionStrip
-      title="Campus Chronicles"
-      href="/suture/campus-chronicles"
-      articles={campusChroniclesAll}
-      description="The pulse of the campus. Find out about the latest events, sports tournaments, club meets, and everything else happening inside PSG IMSR. Stay connected and stay updated."
-    />
+    <section class="home-section section-py" aria-labelledby="campus-chronicles-heading">
+      <div class="container">
+        <div class="home-section__header" data-reveal>
+          <div class="home-section__title-block">
+            <h2 class="home-section__title" id="campus-chronicles-heading">Campus Chronicles</h2>
+            <p class="home-section__description">The pulse of the campus. Find out about the latest events, sports tournaments, club meets, and student life inside PSG IMSR.</p>
+          </div>
+          <a href="/suture/campus-chronicles" class="home-section__view-all">
+            View All
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <hr class="divider" />
+        <MagazineGrid articles={campusChroniclesAll} sectionLabel="Campus Chronicles" />
+      </div>
+    </section>
   )}
 
-  <!-- 6. World Health strip -->
+  <!-- 6. World Health — Magazine Grid -->
   {worldHealth.length > 0 && (
-    <SectionStrip
-      title="World Health"
-      href="/suture/sections/world-health"
-      articles={worldHealth}
-      description="Stay informed on the history and significance of major global health events with this section. Every edition focuses on a particular day of significance and this edition brings forward to you the World Organ Transplantation day - August 13 2026."
-    />
+    <section class="home-section section-py" aria-labelledby="world-health-heading">
+      <div class="container">
+        <div class="home-section__header" data-reveal>
+          <div class="home-section__title-block">
+            <h2 class="home-section__title" id="world-health-heading">World Health</h2>
+            <p class="home-section__description">Stay informed on global health milestones, clinical breakthroughs, and days of international medical significance.</p>
+          </div>
+          <a href="/suture/sections/world-health" class="home-section__view-all">
+            View All
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <hr class="divider" />
+        <MagazineGrid articles={worldHealth} sectionLabel="World Health" />
+      </div>
+    </section>
   )}
 
-  <!-- 7. Beyond The Books strip -->
+  <!-- 7. Beyond The Books — Magazine Grid -->
   {beyondTheBooksAll.length > 0 && (
-    <SectionStrip
-      title="Beyond The Books"
-      href="/suture/beyond-the-books"
-      articles={beyondTheBooksAll}
-      description="Time to drop the textbooks and explore your creative side. Here is a curated space showcasing the artistic, poetic and photographic talents of the students of PSG IMSR."
-    />
+    <section class="home-section section-py" aria-labelledby="beyond-the-books-heading">
+      <div class="container">
+        <div class="home-section__header" data-reveal>
+          <div class="home-section__title-block">
+            <h2 class="home-section__title" id="beyond-the-books-heading">Beyond The Books</h2>
+            <p class="home-section__description">Time to drop the textbooks and explore your creative side — showcasing the artistic, poetic, and photographic talents of PSG IMSR.</p>
+          </div>
+          <a href="/suture/beyond-the-books" class="home-section__view-all">
+            View All
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+        <hr class="divider" />
+        <MagazineGrid articles={beyondTheBooksAll} sectionLabel="Beyond The Books" />
+      </div>
+    </section>
   )}
 
   <!-- 8. Section ticker (second instance) -->

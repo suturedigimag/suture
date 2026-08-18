@@ -20,7 +20,7 @@ interface Props {
 
 const { article, relatedArticles = [], sectionName, sectionHref } = Astro.props;
 
-const categoryKey = sectionName || article.collectionSlug;
+const categoryKey = article.collectionSlug || sectionName;
 const bylinePrefix = getBylinePrefix(categoryKey);
 const bylineLabel = getBylineLabel(categoryKey);
 
@@ -137,7 +137,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
                     </div>
                   )}
                   <h3 class="article-related__title">{rel.title}</h3>
-                  {rel.author && <p class="article-related__author">{getBylinePrefix(sectionName || rel.collectionSlug)} {rel.author}</p>}
+                  {rel.author && <p class="article-related__author">{getBylinePrefix(rel.collectionSlug || sectionName)} {rel.author}</p>}
                 </a>
               ))}
             </div>
@@ -376,6 +376,21 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
 
         allThumbs.forEach((t) => t.classList.remove('active'));
         thumbBtn.classList.add('active');
+
+        // Smoothly auto-scroll the thumbnail track so active thumbnail stays centered in view
+        const track = gallery.querySelector('.gallery-thumbs-track') as HTMLElement | null;
+        if (track) {
+          const trackRect = track.getBoundingClientRect();
+          const btnRect = thumbBtn.getBoundingClientRect();
+          const targetScrollLeft = track.scrollLeft + (btnRect.left - trackRect.left) - (track.clientWidth / 2) + (btnRect.width / 2);
+          track.scrollTo({
+            left: targetScrollLeft,
+            behavior: 'smooth'
+          });
+        } else {
+          thumbBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
         return;
       }
 
@@ -401,11 +416,12 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
         return;
       }
 
-      // Handle Image Lightbox click
-      if (target.tagName === 'IMG' && (target.closest('.article-body') || target.classList.contains('article-cover__img'))) {
-        if (target.closest('.article-related') || target.classList.contains('gallery-thumb-btn')) return;
-        const src = target.getAttribute('data-lightbox-src') || (target as HTMLImageElement).src;
-        const caption = target.getAttribute('data-caption') || target.getAttribute('alt') || '';
+      // Handle Image Lightbox click on any article content or gallery image (direct click, no separate button)
+      const clickedImg = (target.tagName === 'IMG' ? target : target.closest('figure')?.querySelector('img')) as HTMLImageElement | null;
+      if (clickedImg && clickedImg.closest('.article-body')) {
+        if (clickedImg.closest('.article-related') || clickedImg.classList.contains('gallery-thumb-btn')) return;
+        const src = clickedImg.getAttribute('data-lightbox-src') || clickedImg.src;
+        const caption = clickedImg.getAttribute('data-caption') || clickedImg.getAttribute('alt') || '';
         if (src && !src.includes('/images/logo.png')) {
           e.preventDefault();
           openLightbox(src, caption);
@@ -423,8 +439,9 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   .article-cover {
     position: relative;
     width: 100%;
-    height: clamp(320px, 55vh, 600px);
+    height: clamp(340px, 55vh, 600px);
     overflow: hidden;
+    background: var(--color-surface-hover);
   }
 
   .article-cover__img {
@@ -436,6 +453,7 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
   .article-cover__gradient {
     position: absolute;
     inset: 0;
+    pointer-events: none;
     background: linear-gradient(to bottom, transparent 40%, var(--color-bg) 100%);
   }
 
@@ -782,32 +800,32 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(10, 10, 8, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: #ffffff;
-    font-size: 1.5rem;
-    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 10;
     transition: all var(--dur-fast) var(--ease-out-expo);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   }
-
+  .article-body :global(.slider-btn svg) {
+    display: block;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
   .article-body :global(.slider-btn:hover) {
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(10, 10, 8, 0.95);
     border-color: rgba(255, 255, 255, 0.6);
     transform: translateY(-50%) scale(1.08);
   }
-
   .article-body :global(.slider-btn.prev) {
     left: var(--space-3);
   }
-
   .article-body :global(.slider-btn.next) {
     right: var(--space-3);
   }
@@ -887,19 +905,29 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(10, 10, 8, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: #ffffff;
-    border: 1px solid rgba(255,255,255,0.3);
-    font-size: 1.8rem;
-    line-height: 1;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     z-index: 10;
-    transition: background var(--dur-fast);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    transition: all var(--dur-fast) var(--ease-out-expo);
   }
-  .article-body :global(.gallery-nav-btn:hover) { background: rgba(0, 0, 0, 0.9); }
+  .article-body :global(.gallery-nav-btn svg) {
+    display: block;
+    pointer-events: none;
+    flex-shrink: 0;
+  }
+  .article-body :global(.gallery-nav-btn:hover) {
+    background: rgba(10, 10, 8, 0.95);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-50%) scale(1.08);
+  }
   .article-body :global(.gallery-nav-btn.prev) { left: var(--space-4); }
   .article-body :global(.gallery-nav-btn.next) { right: var(--space-4); }
 
@@ -921,8 +949,15 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     gap: var(--space-2);
     padding: var(--space-3);
     overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
     background: var(--color-surface-hover);
     border-top: 1px solid var(--color-border);
+  }
+  .article-body :global(.gallery-thumbs-track::-webkit-scrollbar) {
+    display: none;
   }
   .article-body :global(.gallery-thumb-btn) {
     width: 72px;
@@ -1359,16 +1394,16 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: rgba(10, 10, 8, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(10, 10, 8, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--dur-normal) var(--ease-in-out), visibility var(--dur-normal);
-    padding: var(--gutter);
+    padding: var(--space-4);
   }
 
   .image-lightbox--open {
@@ -1392,27 +1427,34 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     justify-content: center;
     cursor: pointer;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    transition: background var(--dur-fast);
+    transition: all var(--dur-fast);
+    z-index: 10001;
   }
 
   .lightbox-close:hover {
     background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
   }
 
   .lightbox-content {
-    max-width: 92vw;
-    max-height: 88vh;
+    max-width: 96vw;
+    max-height: 94vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 10000;
   }
 
   #lightbox-img {
-    max-width: 100%;
-    max-height: 78vh;
+    max-width: 95vw;
+    max-height: 84vh;
+    width: auto;
+    height: auto;
     object-fit: contain;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
   }
 
   .lightbox-caption {
@@ -1421,6 +1463,6 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
     font-size: var(--fs-sm);
     color: rgba(255, 255, 255, 0.9);
     text-align: center;
-    max-width: 600px;
+    max-width: 700px;
   }
 </style>
