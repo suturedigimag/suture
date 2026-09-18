@@ -73,13 +73,11 @@ const beyondTheBooksAll = [...beyondTheBooksAllRaw].sort(
   (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
 );
 
-// Featured = second article overall (hero takes first)
+// Featured = most recent article overall
 const allRecent = [...sectionsAll, ...campusChroniclesAll, ...worldHealth, ...beyondTheBooksAll].sort(
   (a, b) => new Date(b._createdDate).getTime() - new Date(a._createdDate).getTime()
 );
-const featuredArticle = allRecent.find(
-  (a) => a._id !== heroArticle?._id
-) ?? allRecent[0] ?? null;
+const featuredArticle = heroArticle ?? allRecent[0] ?? null;
 ---
 
 <PageLayout
