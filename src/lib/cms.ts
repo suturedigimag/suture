@@ -309,7 +309,7 @@ export async function getAllArticleSlugs(
  */
 export async function getMostRecentArticle(): Promise<Article | null> {
   const allCollections = Object.entries(COLLECTION_IDS).filter(
-    ([key]) => key !== 'aboutUs' && key !== 'designTeam' && key !== 'photoTeam' && key !== 'events' && key !== 'eventsAlt',
+    ([key]) => key !== 'aboutUs' && key !== 'designTeam' && key !== 'photoTeam' && key !== 'events' && key !== 'eventsAlt' && key !== 'staffQuotes',
   );
 
   const fetches = allCollections.map(async ([, id]) => {
