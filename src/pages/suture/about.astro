@@ -4,7 +4,6 @@ export const prerender = false;
 import { Image } from 'astro:assets';
 import PageLayout from '../../layouts/PageLayout.astro';
 import { getAboutMembers, getDesignTeamMembers, getPhotoTeamMembers, getCredits, renderRichContent } from '../../lib/cms';
-import InstagramWall from '../../components/InstagramWall.astro';
 
 const boardMembers = await getAboutMembers();
 const designMembers = await getDesignTeamMembers();

@@ -1,3 +1,5 @@
+import { fetchFromInstagramGraphApi } from '../lib/instagram';
+
 export interface InstagramPost {
   id: string;
   src: string;
@@ -11,169 +13,161 @@ export interface InstagramPost {
 }
 
 export const OFFICIAL_IG_PROFILE = 'https://www.instagram.com/litclubpsgimsr/';
+export const SOCIABLEKIT_IFRAME_URL = 'https://widgets.sociablekit.com/instagram-feed/iframe/25716077';
+export const SOCIABLEKIT_FEED_URL = 'https://data.accentapi.com/feed/25716077.json';
 
+// Authentic, verified Instagram posts from @litclubpsgimsr
 export const INSTAGRAM_POSTS: InstagramPost[] = [
   {
-    id: '18331116538281101',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxODMzMTExNjUzODI4MTEwMSIsImgiOiI6bG9sczgifQ.jpg?class=squareLarge',
+    id: 'Ddbk-UxiQhO',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/Ddbk-UxiQhO-thumbnail.webp?v=1790099073479',
+    alt: 'The Suture Digital Magazine Launch: Embers',
+    caption: 'With great delight, we present the first edition of "The Suture", a digital magazine launched by the Literature Club of PSGIMSR. Titled "Embers", this edition brings together clinical insights, campus events, and student imagination.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/Ddbk-UxiQhO/',
+    timestamp: '2026-09-18T00:00:00Z',
+    mediaType: 'CAROUSEL_ALBUM'
+  },
+  {
+    id: 'DaXkWZfRZFF',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DaXkWZfRZFF-thumbnail.webp?v=1790099073481',
     alt: 'Jojo Rabbit Movie Screening',
-    caption: 'A little boy, enamoured by Adolf Hitler\'s authoritarian personality, aspires to find a place in the Nazi army... The Literature Club of PSGIMSR cordially invites you all to the screening of Jojo Rabbit.',
-    permalink: 'https://www.instagram.com/p/DaXkWZfRZFF/',
-    timestamp: '2026-07-04T10:51:09+0000',
+    caption: 'The Literature Club of PSGIMSR cordially invites you all to the screening of Jojo Rabbit.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DaXkWZfRZFF/',
+    timestamp: '2026-07-04T00:00:00Z',
     mediaType: 'IMAGE'
   },
   {
-    id: '17991999590761483-1',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzk5MTk5OTU5MDc2MTQ4MyIsImgiOiIxMHdreGNuIn0.jpg?class=squareLarge',
+    id: 'DVJhCcBiYX1',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DVJhCcBiYX1-thumbnail.webp?v=1790099073482',
     alt: 'Fiction vs Faculty Episode 3',
     caption: '"Fiction vs Faculty" was far too much delight for our faculties! Episode 3 witnessed Dr. Sujaya Menon (Department of Medicine) evince her erudition with remarkable elegance.',
-    permalink: 'https://www.instagram.com/p/DVJhCcBiYX1/',
-    timestamp: '2026-02-24T17:15:50+0000',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DVJhCcBiYX1/',
+    timestamp: '2026-02-24T00:00:00Z',
     mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17991999590761483-2',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzk5MTk5OTU5MDc2MTQ4MyIsImgiOiIxanRjaXRiIiwiYyI6IjE4Mzg2MDkzNzk0MTUyODc2In0.jpg?class=squareLarge',
-    alt: 'Dr. Sujaya Menon at Fiction vs Faculty',
-    caption: 'Dr. Sujaya Menon from the Department of Medicine analyzing medical accuracy in classic films during Fiction vs Faculty.',
-    permalink: 'https://www.instagram.com/p/DVJhCcBiYX1/',
-    timestamp: '2026-02-24T17:15:50+0000',
-    mediaType: 'IMAGE'
-  },
-  {
-    id: '17991999590761483-3',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzk5MTk5OTU5MDc2MTQ4MyIsImgiOiIxd3dvNGV5IiwiYyI6IjE3OTMzMzM3MjI1MDM5MTk3In0.jpg?class=squareLarge',
-    alt: 'Fiction vs Faculty Student Audience',
-    caption: 'Engaged medical students listening intently during the interactive Q&A of Fiction vs Faculty at PSGIMSR.',
-    permalink: 'https://www.instagram.com/p/DVJhCcBiYX1/',
-    timestamp: '2026-02-24T17:15:50+0000',
-    mediaType: 'IMAGE'
-  },
-  {
-    id: '17991999590761483-4',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzk5MTk5OTU5MDc2MTQ4MyIsImgiOiJsZXg5bGMiLCJjIjoiMTgwNzkyNDA2NTgwNjcyODMifQ.jpg?class=squareLarge',
-    alt: 'Fiction vs Faculty Scene Analysis',
-    caption: 'Faculty & students dissecting cinematic depictions of emergency healthcare and diagnostic decisions.',
-    permalink: 'https://www.instagram.com/p/DVJhCcBiYX1/',
-    timestamp: '2026-02-24T17:15:50+0000',
-    mediaType: 'IMAGE'
-  },
-  {
-    id: '18111214099680091',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxODExMTIxNDA5OTY4MDA5MSIsImgiOiIzM21namwifQ.jpg?class=squareLarge',
-    alt: 'Fiction vs Faculty Department of Medicine Announcement',
+    id: 'DVFYYIZkVxq',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DVFYYIZkVxq-thumbnail.webp?v=1790099073482',
+    alt: 'Fiction vs Faculty Announcement',
     caption: 'The Literature Club, in collaboration with Alchemy, presents Fiction vs Faculty featuring Dr. Sujaya Menon from the Department of Medicine.',
-    permalink: 'https://www.instagram.com/p/DVFYYIZkVxq/',
-    timestamp: '2026-02-23T02:43:13+0000',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DVFYYIZkVxq/',
+    timestamp: '2026-02-22T00:00:00Z',
     mediaType: 'IMAGE'
   },
   {
-    id: '17920925271249239',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkyMDkyNTI3MTI0OTIzOSIsImgiOiIxZnB5OHE5In0.jpg?class=squareLarge',
+    id: 'DUACgBLEds-',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DUACgBLEds--thumbnail.webp?v=1790099073482',
     alt: 'Screening starts sharp 5:05 PM',
     caption: 'Screening starts sharp 5:05 PM! Join us for an evening of literature, cinema, and engaging discussions at PSGIMSR.',
-    permalink: 'https://www.instagram.com/p/DUACgBLEds-/',
-    timestamp: '2026-01-27T04:26:13+0000',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DUACgBLEds-/',
+    timestamp: '2026-01-26T00:00:00Z',
     mediaType: 'IMAGE'
   },
   {
-    id: '17931764427014994-1',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiJmbm51diIsImMiOiIxNzg1MTgyNzEzMjYwNDExNCJ9.jpg?class=squareLarge',
-    alt: 'Debate Roulette Event Overview',
-    caption: 'Audience: 😄🎉 Speakers: 😵‍💫💬 Rules: optional Fun: mandatory. Debate Roulette was pure pandemonium! 🎲✨ Photo by @sal.ymf',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
+    id: 'DTvMd_3E3pm',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DTvMd_3E3pm-thumbnail.webp?v=1790099073482',
+    alt: 'Black Ticket Film Club Launch',
+    caption: 'Launching PSGIMSR\'s very own film club - Black Ticket. Celebrating cinematic storytelling and short film analysis on campus.',
+    permalink: 'https://www.instagram.com/framespersecondclub/reel/DTvMd_3E3pm/',
+    timestamp: '2026-01-20T00:00:00Z',
+    mediaType: 'VIDEO'
+  },
+  {
+    id: 'DScql0oEV4l',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DScql0oEV4l-thumbnail.webp?v=1790099073482',
+    alt: 'Debate Roulette Event',
+    caption: 'Audience: laughter and cheers. Speakers: fast thinking. Rules: optional. Debate Roulette was pure pandemonium!',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DScql0oEV4l/',
+    timestamp: '2025-12-19T00:00:00Z',
     mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17931764427014994-2',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxaWwyZTJuIiwiYyI6IjE4MDg3MjE3NDQyMDgwNDg8In0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Speaker',
-    caption: 'Spontaneous 60-second rebuttal round at Debate Roulette. Pure wit and fast thinking on stage.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
-    mediaType: 'IMAGE'
+    id: 'DP3_HaikbMj',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DP3_HaikbMj-thumbnail.webp?v=1790099073482',
+    alt: 'Fiction vs Faculty Episode 2',
+    caption: 'Fiction vs Faculty - Episode 2 featuring Dr. Denesh Narayanan analyzing medical storytelling in cinema.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DP3_HaikbMj/',
+    timestamp: '2025-10-16T00:00:00Z',
+    mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17931764427014994-3',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxMmUxMjlnIiwiYyI6IjE3OTA0NDk3MDcwMzAyNzU4In0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Panel',
-    caption: 'Our student panel navigating surprise topics with hilarious enthusiasm.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
-    mediaType: 'IMAGE'
+    id: 'DPCIHzVk3aW',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DPCIHzVk3aW-thumbnail.webp?v=1790099073483',
+    alt: 'Improv Night 25',
+    caption: 'Where words fail, we improvise. Improv Night \'25 was a whirlwind of laughter, creativity, and unexpected theatrical magic.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DPCIHzVk3aW/',
+    timestamp: '2025-09-25T00:00:00Z',
+    mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17931764427014994-4',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxaTUzaXdrIiwiYyI6IjE4MDYzMTI4ODY0NTU0NDkzIn0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Audience',
-    caption: 'Laughter filling the lecture hall during Debate Roulette at PSGIMSR.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
-    mediaType: 'IMAGE'
+    id: 'DOFweqdEtJu',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DOFweqdEtJu-thumbnail.webp?v=1790099073483',
+    alt: 'Fiction vs Faculty Episode 1: House MD',
+    caption: 'Fiction vs Faculty - Episode 1 featuring House MD with diagnostic clinical insights and panel dissection from our faculty.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DOFweqdEtJu/',
+    timestamp: '2025-09-01T00:00:00Z',
+    mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17931764427014994-5',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxMGdyYnE2IiwiYyI6IjE4MDY0NDg4MzE3MTk0NTA1In0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Stage Moment',
-    caption: 'A victorious moment during the final debate showdown at PSGIMSR.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
-    mediaType: 'IMAGE'
+    id: 'DMdQPV4Ttgi',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DMdQPV4Ttgi-thumbnail.webp?v=1790099073483',
+    alt: 'PSGIMSR First Book Club Meeting',
+    caption: 'Sharing pictures from the first book club meeting of the year! Thought-provoking literary discussions, book swaps, and member reviews.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DMdQPV4Ttgi/',
+    timestamp: '2025-07-23T00:00:00Z',
+    mediaType: 'CAROUSEL_ALBUM'
   },
   {
-    id: '17931764427014994-6',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxamw3anpsIiwiYyI6IjE4MDA3Njk3ODk0NjY0OTYwIn0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Winners',
-    caption: 'Celebrating our top speakers at Debate Roulette 2025.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
-    mediaType: 'IMAGE'
-  },
-  {
-    id: '17931764427014994-7',
-    src: 'https://behold.pictures/eyJ1IjoiZ1l2ekdPSVlGdWVXanhaUFY2cXpqZWV4dms1MyIsImYiOiJkeURPc3dieWU3Wk83RkhnNTd5RSIsInAiOiIxNzkzMTc2NDQyNzAxNDk5NCIsImgiOiIxNXVydDc5IiwiYyI6IjE4NTQ4MTI5MTY0MDQ4MjkyIn0.jpg?class=squareLarge',
-    alt: 'Debate Roulette Team Effort',
-    caption: 'The Literature Club team working behind the scenes for an unforgettable night.',
-    permalink: 'https://www.instagram.com/p/DScql0oEV4l/',
-    timestamp: '2025-12-19T14:10:41+0000',
+    id: 'DMdPo0_zop0',
+    src: 'https://data-image.sociablekit.com/sources/instagram-feed/litclubpsgimsr/DMdPo0_zop0-thumbnail.webp?v=1790099073483',
+    alt: 'Tamil Poetry Competition Winner',
+    caption: 'Delighted to announce the winner of the Tamil Poetry Competition held by the Literature Club of PSGIMSR.',
+    permalink: 'https://www.instagram.com/litclubpsgimsr/p/DMdPo0_zop0/',
+    timestamp: '2025-07-23T00:00:00Z',
     mediaType: 'IMAGE'
   }
 ];
 
-export const SOCIABLEKIT_IFRAME_URL = 'https://widgets.sociablekit.com/instagram-feed/iframe/25716077';
-export const SOCIABLEKIT_FEED_URL = 'https://data.accentapi.com/feed/25716077.json';
-
 export async function fetchLiveInstagramPosts(): Promise<InstagramPost[]> {
+  // 1. Try official Instagram Graph API with Instagram Login if configured
+  try {
+    const officialPosts = await fetchFromInstagramGraphApi();
+    if (officialPosts && officialPosts.length) {
+      return officialPosts;
+    }
+  } catch {}
+
+  // 2. Try SociableKIT live JSON endpoint
   try {
     const res = await fetch(`${SOCIABLEKIT_FEED_URL}?nocache=${Date.now()}`);
-    if (!res.ok) return INSTAGRAM_POSTS;
-    const data = await res.json();
-    const posts = data.posts || data.data || [];
-    if (!Array.isArray(posts) || !posts.length) return INSTAGRAM_POSTS;
-
-    const list: InstagramPost[] = [];
-    posts.forEach((p: any) => {
-      const mainImg = p.image_url || p.media_url || p.standard_resolution || p.src || (p.sizes?.large?.mediaUrl || p.sizes?.medium?.mediaUrl);
-      if (mainImg) {
-        list.push({
-          id: p.code || p.id || `sk-${list.length}`,
-          src: mainImg,
-          alt: p.post_text ? p.post_text.slice(0, 100) : (p.prunedCaption || p.caption || 'Instagram Post'),
-          caption: p.post_text || p.caption || '',
-          permalink: p.link || (p.code ? `https://www.instagram.com/p/${p.code}/` : OFFICIAL_IG_PROFILE),
-          timestamp: p.created_time || p.timestamp || '',
-          mediaType: p.mediaType === 'video' ? 'VIDEO' : (p.mediaType === 'carousel' ? 'CAROUSEL_ALBUM' : 'IMAGE')
+    if (res.ok) {
+      const data = await res.json();
+      const posts = data.posts || data.data || [];
+      if (Array.isArray(posts) && posts.length) {
+        const list: InstagramPost[] = [];
+        posts.forEach((p: any) => {
+          const mainImg = p.image_url || p.post_link || p.pic_src || p.full_pic_src || p.thumbnail;
+          if (mainImg) {
+            list.push({
+              id: p.code || p.id || `sk-${list.length}`,
+              src: mainImg,
+              alt: p.pic_text ? p.pic_text.slice(0, 100).replace(/\n/g, ' ') : 'Instagram Post',
+              caption: p.pic_text || p.post_text || p.caption || '',
+              permalink: p.link || (p.code ? `https://www.instagram.com/litclubpsgimsr/p/${p.code}/` : OFFICIAL_IG_PROFILE),
+              timestamp: p.date_time_posted || p.created_time || p.timestamp || '',
+              mediaType: p.pic_type === 'carousel' ? 'CAROUSEL_ALBUM' : (p.pic_type === 'video' ? 'VIDEO' : 'IMAGE')
+            });
+          }
         });
-      }
-    });
 
-    if (list.length) {
-      list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
-      return list;
+        if (list.length) {
+          list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+          return list;
+        }
+      }
     }
-    return INSTAGRAM_POSTS;
-  } catch {
-    return INSTAGRAM_POSTS;
-  }
+  } catch {}
+
+  // 3. Fallback to authentic curated Instagram posts
+  return INSTAGRAM_POSTS;
 }

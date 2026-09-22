@@ -4,11 +4,17 @@
  * High-performance 3D Spherical Visualization of Literature Club Instagram posts
  * Premium Editorial Modal on post select (no Meta/Behold embeds or iframes).
  */
+interface Props {
+  segments?: number;
+}
+
+const { segments = 28 } = Astro.props;
+
 import DomeGallery from './react/DomeGallery';
 import { INSTAGRAM_POSTS, OFFICIAL_IG_PROFILE } from '../data/instagramPosts';
 ---
 
-<section class="ig-wall section-py" aria-label="Instagram 3D Dome Gallery">
+<section class="ig-wall section-py" id="instagram" aria-label="Instagram 3D Dome Gallery">
   <div class="container">
 
     <div class="ig-wall__header" data-reveal>
@@ -24,9 +30,9 @@ import { INSTAGRAM_POSTS, OFFICIAL_IG_PROFILE } from '../data/instagramPosts';
         images={INSTAGRAM_POSTS}
         overlayBlurColor="#FAFAF8"
         fit={0.95}
-        minRadius={950}
-        maxRadius={1800}
-        segments={45}
+        minRadius={900}
+        maxRadius={1700}
+        segments={segments}
         openedImageWidth="460px"
         openedImageHeight="460px"
         client:only="react"

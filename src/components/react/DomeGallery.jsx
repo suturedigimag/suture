@@ -32,7 +32,6 @@ function buildItems(pool, seg) {
     return ys.map(y => ({ x, y, sizeX: 2, sizeY: 2 }));
   });
 
-  const totalSlots = coords.length;
   if (pool.length === 0) {
     return coords.map(c => ({ ...c, src: '', alt: '', caption: '', permalink: '', timestamp: '' }));
   }
@@ -50,14 +49,38 @@ function buildItems(pool, seg) {
     };
   });
 
-  // Stride spacing algorithm to distribute images across 3D dome without adjacent duplicates
-  const stride = normalizedImages.length > 5 ? 7 : 1;
-  const usedImages = Array.from({ length: totalSlots }, (_, i) => normalizedImages[(i * stride) % normalizedImages.length]);
+  function gcd(a, b) {
+    while (b) {
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a;
+  }
 
+  function getCoPrime(n, start) {
+    let cand = Math.max(1, start);
+    while (gcd(cand, n) !== 1) cand++;
+    return cand;
+  }
+
+  const N = normalizedImages.length;
+  const colStride = getCoPrime(N, 5);
+  const rowStride = getCoPrime(N, colStride + 2);
+
+  const usedImages = [];
+  for (let c = 0; c < seg; c++) {
+    for (let r = 0; r < 7; r++) {
+      const idx = (c * colStride + r * rowStride) % N;
+      usedImages.push(normalizedImages[idx]);
+    }
+  }
+
+  // Safety pass to eliminate any consecutive duplicates
   for (let i = 1; i < usedImages.length; i++) {
     if (usedImages[i].src === usedImages[i - 1].src) {
       for (let j = i + 1; j < usedImages.length; j++) {
-        if (usedImages[j].src !== usedImages[i].src) {
+        if (usedImages[j].src !== usedImages[i].src && usedImages[j].src !== usedImages[i - 1].src) {
           const tmp = usedImages[i];
           usedImages[i] = usedImages[j];
           usedImages[j] = tmp;
