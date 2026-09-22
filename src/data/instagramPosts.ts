@@ -141,50 +141,38 @@ export const INSTAGRAM_POSTS: InstagramPost[] = [
   }
 ];
 
+export const SOCIABLEKIT_IFRAME_URL = 'https://widgets.sociablekit.com/instagram-feed/iframe/25716077';
+export const SOCIABLEKIT_FEED_URL = 'https://data.accentapi.com/feed/25716077.json';
+
 export async function fetchLiveInstagramPosts(): Promise<InstagramPost[]> {
   try {
-    const res = await fetch('https://feeds.behold.so/dyDOswbye7ZO7FHg57yE');
+    const res = await fetch(`${SOCIABLEKIT_FEED_URL}?nocache=${Date.now()}`);
     if (!res.ok) return INSTAGRAM_POSTS;
     const data = await res.json();
-    const posts = data.posts || [];
-    if (!posts.length) return INSTAGRAM_POSTS;
+    const posts = data.posts || data.data || [];
+    if (!Array.isArray(posts) || !posts.length) return INSTAGRAM_POSTS;
 
     const list: InstagramPost[] = [];
     posts.forEach((p: any) => {
-      const mainImg = p.sizes?.large?.mediaUrl || p.sizes?.medium?.mediaUrl || p.mediaUrl;
-      list.push({
-        id: p.id,
-        src: mainImg,
-        alt: p.prunedCaption || p.caption || 'Instagram Post',
-        caption: p.caption || '',
-        permalink: p.permalink || OFFICIAL_IG_PROFILE,
-        timestamp: p.timestamp || '',
-        mediaType: p.mediaType || 'IMAGE'
-      });
-
-      // Unpack carousel children images so dome gets many unique high-res photos
-      if (p.children && p.children.length) {
-        p.children.forEach((c: any, index: number) => {
-          const childImg = c.sizes?.large?.mediaUrl || c.sizes?.medium?.mediaUrl || c.mediaUrl;
-          if (childImg && childImg !== mainImg) {
-            list.push({
-              id: `${p.id}-child-${index}`,
-              src: childImg,
-              alt: p.caption || 'Instagram Gallery Image',
-              caption: p.caption || '',
-              permalink: p.permalink || OFFICIAL_IG_PROFILE,
-              timestamp: p.timestamp || '',
-              mediaType: 'IMAGE'
-            });
-          }
+      const mainImg = p.image_url || p.media_url || p.standard_resolution || p.src || (p.sizes?.large?.mediaUrl || p.sizes?.medium?.mediaUrl);
+      if (mainImg) {
+        list.push({
+          id: p.code || p.id || `sk-${list.length}`,
+          src: mainImg,
+          alt: p.post_text ? p.post_text.slice(0, 100) : (p.prunedCaption || p.caption || 'Instagram Post'),
+          caption: p.post_text || p.caption || '',
+          permalink: p.link || (p.code ? `https://www.instagram.com/p/${p.code}/` : OFFICIAL_IG_PROFILE),
+          timestamp: p.created_time || p.timestamp || '',
+          mediaType: p.mediaType === 'video' ? 'VIDEO' : (p.mediaType === 'carousel' ? 'CAROUSEL_ALBUM' : 'IMAGE')
         });
       }
     });
 
-    // Ensure newest Instagram posts are sorted first
-    list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
-
-    return list.length ? list : INSTAGRAM_POSTS;
+    if (list.length) {
+      list.sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime());
+      return list;
+    }
+    return INSTAGRAM_POSTS;
   } catch {
     return INSTAGRAM_POSTS;
   }

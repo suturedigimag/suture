@@ -48,6 +48,7 @@ export const COLLECTION_IDS = {
   aboutUs:               'AboutUs',
   designTeam:            'DesignTeam',
   photoTeam:             'PhotoTeam',
+  credits:               'Credits',
 
   // Staff & Faculty Quotes
   staffQuotes:           'StaffQuotes',
@@ -129,12 +130,13 @@ const CANDIDATE_COLLECTION_IDS: Record<string, string[]> = {
   'AboutUs': ['AboutUs', 'About', 'Board', 'OurBoard', 'Team'],
   'DesignTeam': ['DesignTeam', 'Design_Team', 'Design', 'Designers', 'DesignTeamCollection'],
   'PhotoTeam': ['PhotoTeam', 'Photo_Team', 'Photo', 'Photographers', 'PhotographyTeam', 'PhotoTeamCollection', 'PhotosTeam', 'Phototeam'],
+  'Credits': ['Credits', 'credits', 'Credit', 'credit', 'AboutCredits', 'CreditsCollection'],
   'StaffQuotes': ['StaffQuotes', 'StaffQuote', 'FacultyQuotes', 'Quotes', 'Staff_Quotes'],
 };
 
 // ── Server-side Memory Cache for Blazing Fast Performance ────────
 const cmsCache = new Map<string, { data: any; expiry: number }>();
-const DEFAULT_TTL_MS = 120_000; // 2 minutes TTL
+const DEFAULT_TTL_MS = import.meta.env.DEV ? 2_000 : 120_000;
 
 async function getCached<T>(key: string, fetchFn: () => Promise<T>, ttlMs = DEFAULT_TTL_MS): Promise<T> {
   const cached = cmsCache.get(key);
@@ -309,7 +311,7 @@ export async function getAllArticleSlugs(
  */
 export async function getMostRecentArticle(): Promise<Article | null> {
   const allCollections = Object.entries(COLLECTION_IDS).filter(
-    ([key]) => key !== 'aboutUs' && key !== 'designTeam' && key !== 'photoTeam' && key !== 'events' && key !== 'eventsAlt' && key !== 'staffQuotes',
+    ([key]) => key !== 'aboutUs' && key !== 'designTeam' && key !== 'photoTeam' && key !== 'events' && key !== 'eventsAlt' && key !== 'staffQuotes' && key !== 'credits',
   );
 
   const fetches = allCollections.map(async ([, id]) => {
@@ -930,7 +932,9 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
   function renderNode(node: any): string {
     if (!node) return '';
 
-    switch (node.type) {
+    const nodeType = (node.type || '').toUpperCase().replace(/-/g, '_');
+
+    switch (nodeType) {
       case 'PARAGRAPH': {
         const align = node.paragraphData?.textStyle?.textAlignment;
         const styleAttr = align && align !== 'AUTO' ? ` style="text-align: ${align.toLowerCase()};"` : '';
@@ -1399,6 +1403,11 @@ export function renderRichContent(body: any, isBeyondBooks = false): string {
         const content = (node.nodes || []).map(renderNode).join('');
         return `<tr>${content}</tr>`;
       }
+      case 'TABLE_HEADER_CELL':
+      case 'TH': {
+        const content = (node.nodes || []).map(renderNode).join('');
+        return `<th>${content}</th>`;
+      }
       case 'TABLE_CELL': {
         const content = (node.nodes || []).map(renderNode).join('');
         return `<td>${content}</td>`;
@@ -1542,6 +1551,62 @@ export async function getDesignTeamMembers(): Promise<AboutMember[]> {
 
 export async function getPhotoTeamMembers(): Promise<AboutMember[]> {
   return getTeamMembers(COLLECTION_IDS.photoTeam);
+}
+
+// ── Credits Collection ─────────────────────────────────────────────
+export interface CreditItem {
+  _id: string;
+  title: string;
+  credits?: any; // Wix Rich Content
+}
+
+export async function getCredits(): Promise<CreditItem[]> {
+  return getCached('credits', async () => {
+    const candidateIds = Array.from(new Set([COLLECTION_IDS.credits, ...(CANDIDATE_COLLECTION_IDS[COLLECTION_IDS.credits] || [])]));
+
+    for (const candidate of candidateIds) {
+      try {
+        const response = (await withTimeout(
+          wixClient.items
+            .query(candidate)
+            .limit(50)
+            .find(),
+          8000
+        )) as any;
+
+        if (response?.items && response.items.length > 0) {
+          const sortedItems = [...response.items].sort((a: any, b: any) => {
+            const valA = getManualSortVal(a);
+            const valB = getManualSortVal(b);
+
+            if (valA !== null && valB !== null) {
+              if (valA < valB) return -1;
+              if (valA > valB) return 1;
+              return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
+            }
+            if (valA !== null) return -1;
+            if (valB !== null) return 1;
+            return new Date(a._createdDate).getTime() - new Date(b._createdDate).getTime();
+          });
+
+          return sortedItems.map((item: any) => {
+            const data = item.data ? { ...item, ...item.data } : item;
+            const title = getFieldCaseInsensitive(data, 'title', 'name', 'heading', 'sectionTitle') || 'Credits';
+            const rawCredits = getFieldCaseInsensitive(data, 'credits', 'credit', 'richContent', 'body', 'content', 'description');
+
+            return {
+              _id: item._id,
+              title: String(title).trim(),
+              credits: rawCredits,
+            };
+          });
+        }
+      } catch (err) {
+        console.warn(`[CMS] Error fetching credits from "${candidate}":`, err);
+      }
+    }
+    return [];
+  });
 }
 
 // ── Article Photos Extraction Helper ────────────────────────────

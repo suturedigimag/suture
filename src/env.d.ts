@@ -1,4 +1,4 @@
-// Behold Instagram widget global flag
+// Global window types
 interface Window {
   __bhldScript?: boolean;
 }

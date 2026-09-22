@@ -3,12 +3,13 @@ export const prerender = false;
 
 import { Image } from 'astro:assets';
 import PageLayout from '../../layouts/PageLayout.astro';
-import { getAboutMembers, getDesignTeamMembers, getPhotoTeamMembers } from '../../lib/cms';
+import { getAboutMembers, getDesignTeamMembers, getPhotoTeamMembers, getCredits, renderRichContent } from '../../lib/cms';
 import InstagramWall from '../../components/InstagramWall.astro';
 
 const boardMembers = await getAboutMembers();
 const designMembers = await getDesignTeamMembers();
 const photoMembers = await getPhotoTeamMembers();
+const credits = await getCredits();
 ---
 
 <PageLayout
@@ -26,17 +27,6 @@ const photoMembers = await getPhotoTeamMembers();
 
     <div class="container--narrow section-py">
       <div class="about-page__body" data-reveal>
-        <p class="about-page__lead">
-          The Suture is the independent editorial publication of Literature Club —
-          a student-run journal at the intersection of medicine, campus life, and creative expression.
-        </p>
-
-        <p>
-          We believe in the power of storytelling within the medical college community.
-          From clinical case discussions and research summaries to poetry and photography,
-          The Suture is a space where every student voice matters.
-        </p>
-
         <h2>Our Sections</h2>
         <ul class="about-page__sections">
           <li><strong>Clinical Case Corner</strong> — Real cases, rare diagnoses, educational insights.</li>
@@ -106,7 +96,7 @@ const photoMembers = await getPhotoTeamMembers();
           <div class="about-board__header" data-reveal>
             <p class="eyebrow">Visual Storytelling</p>
             <h2 class="about-board__title">Photo Team</h2>
-            <p class="about-board__sub">Capturing moments, imagery, and visual perspectives across campus and medicine.</p>
+            <p class="about-board__sub">Compiling the captured moments, imagery, and visual perspectives across campus and medicine.</p>
           </div>
 
           <div class="about-board__grid">
@@ -173,11 +163,39 @@ const photoMembers = await getPhotoTeamMembers();
       </section>
     )}
 
-    <!-- ── Instagram Wall ───────────────────────────────────────── -->
-    <section class="lc-instagram section-py" id="instagram" aria-labelledby="instagram-heading">
-    <InstagramWall />
-    </section>
+    <!-- ── Credits Section ──────────────────────────────────────── -->
+    {credits.length > 0 && (
+      <section class="about-credits section-py" id="credits" style="border-top: none;">
+        <div class="container">
+          <div class="about-credits__header" data-reveal>
+            <p class="eyebrow">Acknowledgments</p>
+            <h2 class="about-credits__title">Credits</h2>
+            <p class="about-credits__sub">Recognizing the photographers, contributors, and creative partners who bring The Suture to life.</p>
+          </div>
 
+          <div class={`about-credits__grid ${credits.length === 1 ? 'about-credits__grid--single' : ''}`}>
+            {credits.map((item, i) => {
+              const contentHtml = item.credits ? renderRichContent(item.credits) : '';
+              return (
+                <div class="about-credits__card" data-reveal data-delay={Math.min(i * 100, 400)}>
+                  <div class="about-credits__card-header">
+                    <span class="about-credits__badge">Attribution</span>
+                    <h3 class="about-credits__card-title">{item.title}</h3>
+                  </div>
+                  <div class="about-credits__card-body">
+                    {contentHtml ? (
+                      <div class="about-credits__rich-content" set:html={contentHtml} />
+                    ) : (
+                      <p class="about-credits__empty-text">Detailed credit listings and attributions for this section.</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    )}
   </div>
 </PageLayout>
 
@@ -367,5 +385,247 @@ const photoMembers = await getPhotoTeamMembers();
   /* ── Instagram Section ────────────────────────────────────── */
   .about-instagram {
     background: var(--color-surface);
+  }
+
+  /* ── Credits Section ──────────────────────────────────────── */
+  .about-credits {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about-credits__header {
+    margin-bottom: var(--space-10);
+    text-align: center;
+  }
+
+  .about-credits__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-3);
+    color: var(--color-text-primary);
+  }
+
+  .about-credits__sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    color: var(--color-text-secondary);
+    max-width: 540px;
+    margin-inline: auto;
+    line-height: var(--lh-relaxed);
+  }
+
+  .about-credits__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-8);
+  }
+
+  .about-credits__grid--single {
+    max-width: 840px;
+    margin-inline: auto;
+  }
+
+  .about-credits__card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--dur-normal) var(--ease-out-expo), box-shadow var(--dur-normal) var(--ease-out-expo), border-color var(--dur-normal);
+  }
+
+  .about-credits__card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-border-strong);
+  }
+
+  .about-credits__card-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about-credits__badge {
+    align-self: flex-start;
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wider);
+    color: var(--color-accent);
+    background: var(--color-accent-muted);
+    padding: var(--space-1) var(--space-3);
+    border-radius: 999px;
+  }
+
+  .about-credits__card-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    line-height: var(--lh-snug);
+  }
+
+  .about-credits__card-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .about-credits__rich-content {
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-relaxed);
+  }
+
+  .about-credits__rich-content :global(p) {
+    margin-bottom: var(--space-4);
+    line-height: var(--lh-relaxed);
+  }
+
+  .about-credits__rich-content :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .about-credits__rich-content :global(h2),
+  .about-credits__rich-content :global(h3),
+  .about-credits__rich-content :global(h4) {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-3);
+    line-height: var(--lh-snug);
+  }
+
+  .about-credits__rich-content :global(ul),
+  .about-credits__rich-content :global(ol) {
+    padding-left: var(--space-6);
+    margin-bottom: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .about-credits__rich-content :global(li) {
+    line-height: var(--lh-relaxed);
+  }
+
+  .about-credits__rich-content :global(strong) {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .about-credits__rich-content :global(em) {
+    font-style: italic;
+  }
+
+  .about-credits__rich-content :global(a) {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--dur-fast);
+  }
+
+  .about-credits__rich-content :global(a:hover) {
+    color: var(--color-accent-hover);
+  }
+
+  .about-credits__rich-content :global(blockquote) {
+    border-left: 3px solid var(--color-accent);
+    padding-left: var(--space-4);
+    font-style: italic;
+    color: var(--color-text-primary);
+    margin-block: var(--space-4);
+  }
+
+  .about-credits__rich-content :global(.article-table-wrap) {
+    width: 100%;
+    overflow-x: auto;
+    margin-block: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  .about-credits__rich-content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-base);
+  }
+
+  .about-credits__rich-content :global(tr) {
+    border-bottom: 1px solid var(--color-border);
+    transition: background var(--dur-fast);
+  }
+
+  .about-credits__rich-content :global(tr:last-child) {
+    border-bottom: none;
+  }
+
+  .about-credits__rich-content :global(tr:hover) {
+    background: rgba(0, 0, 0, 0.015);
+  }
+
+  .about-credits__rich-content :global(th),
+  .about-credits__rich-content :global(td) {
+    padding: var(--space-4) var(--space-5);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .about-credits__rich-content :global(th) {
+    background: var(--color-surface-hover);
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  .about-credits__rich-content :global(td:first-child) {
+    width: 200px;
+    min-width: 160px;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-accent);
+    border-right: 1px solid var(--color-border);
+    background: rgba(193, 18, 31, 0.02);
+  }
+
+  .about-credits__rich-content :global(td:first-child p) {
+    margin-bottom: 0;
+    font-family: var(--font-serif);
+    font-weight: 700;
+    color: var(--color-accent);
+  }
+
+  .about-credits__rich-content :global(td:first-child strong) {
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  .about-credits__rich-content :global(td:last-child p) {
+    margin-bottom: var(--space-2);
+    line-height: var(--lh-snug);
+    color: var(--color-text-primary);
+  }
+
+  .about-credits__rich-content :global(td:last-child p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .about-credits__empty-text {
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    color: var(--color-text-tertiary);
+    font-style: italic;
   }
 </style>
