@@ -1,0 +1,1306 @@
+---
+/**
+ * Discussion.astro — The Suture Comments Component
+ *
+ * Implements editorial discussion for published articles with:
+ * - Threaded discussions (top-level comments + nested replies)
+ * - Wix member authentication via Google sign-in
+ * - Secure author-only and admin-only deletion
+ * - 20s visibility-aware polling
+ * - Text-only sanitized rendering
+ */
+interface Props {
+  articleId: string;
+  articleTitle?: string;
+}
+
+const { articleId } = Astro.props;
+const currentPath = Astro.url.pathname;
+const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
+---
+
+<section
+  class="discussion-section"
+  id="article-discussion"
+  data-article-id={articleId}
+  data-login-url={loginUrl}
+  aria-label="Discussion"
+>
+  <div class="discussion-divider"></div>
+
+  <header class="discussion-header">
+    <div class="discussion-header__main">
+      <h2 class="discussion-title">Discussion</h2>
+      <span class="discussion-badge" id="comment-count-badge" aria-live="polite">
+        <span class="count-number">0</span>
+        <span class="count-label">Comments</span>
+      </span>
+    </div>
+    <p class="discussion-subtitle">
+      Reflections, questions, and perspectives on this article from the medical literature community.
+    </p>
+  </header>
+
+  <!-- Auth State Banner -->
+  <div class="discussion-auth" id="discussion-auth-bar">
+    <!-- Rendered dynamically by client script: signed-in profile OR sign-in prompt -->
+    <div class="auth-loading-skeleton" aria-hidden="true">
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-text"></div>
+    </div>
+  </div>
+
+  <!-- Primary Top-Level Composer -->
+  <div class="composer-container" id="main-composer-container" style="display: none;">
+    <form class="comment-composer" id="main-composer-form">
+      <div class="composer-header">
+        <span class="composer-label">Leave a reflection</span>
+        <span class="char-counter" id="main-char-counter">0 / 3000</span>
+      </div>
+
+      <div class="composer-input-wrap">
+        <textarea
+          id="main-comment-textarea"
+          name="text"
+          class="composer-textarea"
+          rows="3"
+          maxlength="3000"
+          placeholder="Write your comment or analysis here..."
+          required
+          aria-label="Write a comment"
+        ></textarea>
+      </div>
+
+      <div class="composer-footer">
+        <div class="composer-feedback" id="main-composer-feedback" role="alert" aria-live="assertive"></div>
+        <button type="submit" class="btn-submit" id="main-submit-btn">
+          <span class="btn-text">Post Comment</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Comments Stream Container -->
+  <div class="comments-stream" id="comments-stream" aria-live="polite">
+    <div class="comments-loading" id="comments-initial-loading">
+      <div class="spinner"></div>
+      <p>Loading discussion...</p>
+    </div>
+
+    <div class="comments-empty" id="comments-empty-state" style="display: none;">
+      <p class="empty-title">No comments yet.</p>
+      <p class="empty-hint">Be the first to share your thoughts on this editorial piece.</p>
+    </div>
+
+    <div class="comments-tree" id="comments-tree-list"></div>
+  </div>
+
+  <!-- Deletion Confirmation Modal -->
+  <div class="delete-modal" id="delete-modal" role="dialog" aria-modal="true" aria-hidden="true" style="display: none;">
+    <div class="delete-modal__backdrop"></div>
+    <div class="delete-modal__content">
+      <h3 class="delete-modal__title">Delete Comment</h3>
+      <p class="delete-modal__message">
+        Are you sure you want to remove this comment? This action cannot be undone.
+      </p>
+      <div class="delete-modal__actions">
+        <button type="button" class="btn-modal btn-modal--cancel" id="cancel-delete-btn">Cancel</button>
+        <button type="button" class="btn-modal btn-modal--confirm" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const section = document.getElementById('article-discussion');
+    if (!section) return;
+
+    const articleId = section.getAttribute('data-article-id');
+    const loginUrl = section.getAttribute('data-login-url') || '/api/auth/login';
+    if (!articleId) return;
+
+    const authBar = document.getElementById('discussion-auth-bar');
+    const mainComposer = document.getElementById('main-composer-container');
+    const mainTextarea = document.getElementById('main-comment-textarea') as HTMLTextAreaElement | null;
+    const mainCharCounter = document.getElementById('main-char-counter');
+    const mainForm = document.getElementById('main-composer-form') as HTMLFormElement | null;
+    const mainSubmitBtn = document.getElementById('main-submit-btn') as HTMLButtonElement | null;
+    const mainFeedback = document.getElementById('main-composer-feedback');
+
+    const streamLoading = document.getElementById('comments-initial-loading');
+    const streamEmpty = document.getElementById('comments-empty-state');
+    const streamTree = document.getElementById('comments-tree-list');
+    const countBadge = document.getElementById('comment-count-badge');
+    const countNumber = countBadge?.querySelector('.count-number');
+    const countLabel = countBadge?.querySelector('.count-label');
+
+    const deleteModal = document.getElementById('delete-modal');
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn') as HTMLButtonElement | null;
+
+    let currentUser: { id: string; name: string; avatarUrl?: string; isAdmin: boolean } | null = null;
+    let pendingDeleteId: string | null = null;
+    let isFetching = false;
+    let pollIntervalId: any = null;
+    let activeReplyForm: HTMLFormElement | null = null;
+
+    // ── Relative Timestamp Formatter ─────────────────────────────────────────
+    function formatRelativeTime(dateString: string): string {
+      try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffSecs < 60) return 'Just now';
+        if (diffMins === 1) return '1 minute ago';
+        if (diffMins < 60) return `${diffMins} minutes ago`;
+        if (diffHours === 1) return '1 hour ago';
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+
+        return date.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+        });
+      } catch {
+        return 'Recently';
+      }
+    }
+
+    // ── Safe DOM Text Node Creation (Strict Text-Only, Zero HTML Execution) ───
+    function createSafeParagraphs(text: string): HTMLElement {
+      const container = document.createElement('div');
+      container.className = 'comment-body-text';
+      const paragraphs = text.split(/\n\s*\n/);
+
+      paragraphs.forEach((pText) => {
+        if (!pText.trim()) return;
+        const p = document.createElement('p');
+        p.textContent = pText.trim();
+        container.appendChild(p);
+      });
+
+      return container;
+    }
+
+    // ── Session State Check ──────────────────────────────────────────────────
+    async function checkAuthSession() {
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Accept': 'application/json' },
+        });
+        const data = await res.json();
+
+        if (data.authenticated && data.member) {
+          currentUser = data.member;
+          renderSignedInBar(data.member);
+          if (mainComposer) mainComposer.style.display = 'block';
+        } else {
+          currentUser = null;
+          renderSignedOutBar();
+          if (mainComposer) mainComposer.style.display = 'none';
+        }
+      } catch {
+        currentUser = null;
+        renderSignedOutBar();
+        if (mainComposer) mainComposer.style.display = 'none';
+      }
+    }
+
+    function renderSignedInBar(user: { name: string; avatarUrl?: string; isAdmin: boolean }) {
+      if (!authBar) return;
+      authBar.innerHTML = '';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'signed-in-bar';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'user-avatar';
+      if (user.avatarUrl) {
+        const img = document.createElement('img');
+        img.src = user.avatarUrl;
+        img.alt = user.name;
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+      }
+
+      const info = document.createElement('div');
+      info.className = 'user-meta';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'user-name';
+      nameSpan.textContent = user.name;
+      info.appendChild(nameSpan);
+
+      if (user.isAdmin) {
+        const badge = document.createElement('span');
+        badge.className = 'user-badge-admin';
+        badge.textContent = 'Staff Editor';
+        info.appendChild(badge);
+      }
+
+      const logoutForm = document.createElement('form');
+      logoutForm.method = 'POST';
+      logoutForm.action = `/api/auth/logout?redirect=${encodeURIComponent(window.location.pathname)}`;
+      const logoutBtn = document.createElement('button');
+      logoutBtn.type = 'submit';
+      logoutBtn.className = 'btn-logout';
+      logoutBtn.textContent = 'Sign out';
+      logoutForm.appendChild(logoutBtn);
+
+      wrap.appendChild(avatar);
+      wrap.appendChild(info);
+      wrap.appendChild(logoutForm);
+
+      authBar.appendChild(wrap);
+    }
+
+    function renderSignedOutBar() {
+      if (!authBar) return;
+      authBar.innerHTML = '';
+
+      const banner = document.createElement('div');
+      banner.className = 'sign-in-prompt';
+
+      const text = document.createElement('p');
+      text.className = 'sign-in-prompt__text';
+      text.textContent = 'Join the discussion. Sign in with Google to post your thoughts or reply.';
+
+      const loginBtn = document.createElement('a');
+      loginBtn.href = loginUrl;
+      loginBtn.className = 'btn-google-login';
+      loginBtn.setAttribute('rel', 'nofollow');
+      loginBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Sign in with Google</span>
+      `;
+
+      banner.appendChild(text);
+      banner.appendChild(loginBtn);
+      authBar.appendChild(banner);
+    }
+
+    // ── Character Counter for Main Composer ──────────────────────────────────
+    mainTextarea?.addEventListener('input', () => {
+      const len = mainTextarea.value.length;
+      if (mainCharCounter) {
+        mainCharCounter.textContent = `${len} / 3000`;
+        if (len >= 2900) {
+          mainCharCounter.classList.add('char-counter--warn');
+        } else {
+          mainCharCounter.classList.remove('char-counter--warn');
+        }
+      }
+    });
+
+    // ── Main Composer Submit Handler ─────────────────────────────────────────
+    mainForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!mainTextarea || !mainSubmitBtn) return;
+
+      const text = mainTextarea.value.trim();
+      if (!text) return;
+
+      if (!currentUser) {
+        window.location.href = loginUrl;
+        return;
+      }
+
+      mainSubmitBtn.disabled = true;
+      mainSubmitBtn.classList.add('loading');
+      if (mainFeedback) mainFeedback.textContent = '';
+
+      try {
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            articleId,
+            text,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          mainTextarea.value = '';
+          if (mainCharCounter) mainCharCounter.textContent = '0 / 3000';
+          await fetchComments();
+        } else {
+          if (mainFeedback) {
+            mainFeedback.textContent = data.error || 'Failed to post comment. Please try again.';
+          }
+        }
+      } catch {
+        if (mainFeedback) {
+          mainFeedback.textContent = 'Network error while posting comment. Please check your connection.';
+        }
+      } finally {
+        mainSubmitBtn.disabled = false;
+        mainSubmitBtn.classList.remove('loading');
+      }
+    });
+
+    // ── Build Single Comment Node ────────────────────────────────────────────
+    function renderCommentItem(comment: any, isReply = false): HTMLElement {
+      const el = document.createElement('article');
+      el.className = `comment-card ${isReply ? 'comment-card--reply' : ''} ${comment.isDeleted ? 'comment-card--deleted' : ''}`;
+      el.id = `comment-${comment.id}`;
+      el.setAttribute('data-id', comment.id);
+
+      // Header
+      const header = document.createElement('header');
+      header.className = 'comment-card__header';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'comment-avatar';
+      if (comment.author?.avatarUrl && !comment.isDeleted) {
+        const img = document.createElement('img');
+        img.src = comment.author.avatarUrl;
+        img.alt = comment.author.name || 'Author';
+        avatar.appendChild(img);
+      } else {
+        const initial = (comment.author?.name || 'R').charAt(0).toUpperCase();
+        avatar.textContent = comment.isDeleted ? '—' : initial;
+      }
+
+      const meta = document.createElement('div');
+      meta.className = 'comment-meta';
+
+      const authorName = document.createElement('span');
+      authorName.className = 'comment-author-name';
+      authorName.textContent = comment.isDeleted ? 'Removed' : comment.author?.name || 'Reader';
+      meta.appendChild(authorName);
+
+      if (comment.author?.isAdmin && !comment.isDeleted) {
+        const adminBadge = document.createElement('span');
+        adminBadge.className = 'comment-badge-editor';
+        adminBadge.textContent = 'Editor';
+        meta.appendChild(adminBadge);
+      }
+
+      const timestamp = document.createElement('time');
+      timestamp.className = 'comment-timestamp';
+      timestamp.dateTime = comment.createdDate;
+      timestamp.textContent = formatRelativeTime(comment.createdDate);
+      meta.appendChild(timestamp);
+
+      header.appendChild(avatar);
+      header.appendChild(meta);
+      el.appendChild(header);
+
+      // Body Content
+      const body = document.createElement('div');
+      body.className = 'comment-card__body';
+      if (comment.isDeleted) {
+        const deletedMsg = document.createElement('p');
+        deletedMsg.className = 'comment-deleted-text';
+        deletedMsg.textContent = comment.content || '[This comment has been removed]';
+        body.appendChild(deletedMsg);
+      } else {
+        body.appendChild(createSafeParagraphs(comment.content));
+      }
+      el.appendChild(body);
+
+      // Actions Toolbar (Reply & Delete)
+      if (!comment.isDeleted) {
+        const toolbar = document.createElement('footer');
+        toolbar.className = 'comment-card__toolbar';
+
+        // Reply Button (Only on top-level or direct sub-level)
+        const replyBtn = document.createElement('button');
+        replyBtn.type = 'button';
+        replyBtn.className = 'btn-action btn-action--reply';
+        replyBtn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          <span>Reply</span>
+        `;
+        replyBtn.addEventListener('click', () => openReplyComposer(comment.id, el));
+        toolbar.appendChild(replyBtn);
+
+        // Delete Button (Author or Admin)
+        const isAuthor = Boolean(currentUser && comment.author?.memberId && currentUser.id === comment.author.memberId);
+        const isAdmin = Boolean(currentUser && currentUser.isAdmin);
+
+        if (isAuthor || isAdmin) {
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'btn-action btn-action--delete';
+          deleteBtn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete</span>
+          `;
+          deleteBtn.addEventListener('click', () => promptDeleteComment(comment.id));
+          toolbar.appendChild(deleteBtn);
+        }
+
+        el.appendChild(toolbar);
+      }
+
+      // Container for Replies
+      if (Array.isArray(comment.replies) && comment.replies.length > 0) {
+        const repliesWrap = document.createElement('div');
+        repliesWrap.className = 'comment-replies-list';
+        comment.replies.forEach((reply: any) => {
+          repliesWrap.appendChild(renderCommentItem(reply, true));
+        });
+        el.appendChild(repliesWrap);
+      }
+
+      return el;
+    }
+
+    // ── Open Inline Reply Composer ───────────────────────────────────────────
+    function openReplyComposer(parentId: string, parentCard: HTMLElement) {
+      if (!currentUser) {
+        window.location.href = loginUrl;
+        return;
+      }
+
+      // Remove any existing open reply form
+      if (activeReplyForm) {
+        activeReplyForm.remove();
+        activeReplyForm = null;
+      }
+
+      const form = document.createElement('form');
+      form.className = 'reply-composer';
+      form.innerHTML = `
+        <div class="composer-header">
+          <span class="composer-label">Replying to comment</span>
+          <span class="char-counter reply-char-counter">0 / 3000</span>
+        </div>
+        <div class="composer-input-wrap">
+          <textarea
+            class="composer-textarea reply-textarea"
+            rows="2"
+            maxlength="3000"
+            placeholder="Write a response..."
+            required
+            aria-label="Write a reply"
+          ></textarea>
+        </div>
+        <div class="composer-footer">
+          <div class="composer-feedback reply-feedback" role="alert"></div>
+          <div class="reply-btns">
+            <button type="button" class="btn-cancel-reply">Cancel</button>
+            <button type="submit" class="btn-submit btn-submit--reply">
+              <span class="btn-text">Reply</span>
+              <span class="btn-spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      const textarea = form.querySelector('.reply-textarea') as HTMLTextAreaElement;
+      const counter = form.querySelector('.reply-char-counter') as HTMLElement;
+      const cancelBtn = form.querySelector('.btn-cancel-reply') as HTMLButtonElement;
+      const submitBtn = form.querySelector('.btn-submit--reply') as HTMLButtonElement;
+      const feedback = form.querySelector('.reply-feedback') as HTMLElement;
+
+      textarea.addEventListener('input', () => {
+        const len = textarea.value.length;
+        if (counter) counter.textContent = `${len} / 3000`;
+      });
+
+      cancelBtn.addEventListener('click', () => {
+        form.remove();
+        activeReplyForm = null;
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        feedback.textContent = '';
+
+        try {
+          const res = await fetch('/api/comments', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              articleId,
+              text,
+              parentCommentId: parentId,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            form.remove();
+            activeReplyForm = null;
+            await fetchComments();
+          } else {
+            feedback.textContent = data.error || 'Failed to submit reply.';
+          }
+        } catch {
+          feedback.textContent = 'Network error while submitting reply.';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('loading');
+        }
+      });
+
+      // Insert reply form right after the parent toolbar
+      const toolbar = parentCard.querySelector('.comment-card__toolbar');
+      if (toolbar && toolbar.nextSibling) {
+        parentCard.insertBefore(form, toolbar.nextSibling);
+      } else {
+        parentCard.appendChild(form);
+      }
+
+      activeReplyForm = form;
+      textarea.focus();
+    }
+
+    // ── Delete Confirmation Flow ─────────────────────────────────────────────
+    function promptDeleteComment(commentId: string) {
+      pendingDeleteId = commentId;
+      if (deleteModal) {
+        deleteModal.style.display = 'flex';
+        deleteModal.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      if (deleteModal) {
+        deleteModal.style.display = 'none';
+        deleteModal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    cancelDeleteBtn?.addEventListener('click', closeDeleteModal);
+    deleteModal?.querySelector('.delete-modal__backdrop')?.addEventListener('click', closeDeleteModal);
+
+    confirmDeleteBtn?.addEventListener('click', async () => {
+      if (!pendingDeleteId || !confirmDeleteBtn) return;
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = 'Deleting...';
+
+      try {
+        const res = await fetch(`/api/comments/${pendingDeleteId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' },
+        });
+
+        if (res.ok) {
+          closeDeleteModal();
+          await fetchComments();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || 'Failed to delete comment.');
+        }
+      } catch {
+        alert('Network error while deleting comment.');
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Delete';
+        closeDeleteModal();
+      }
+    });
+
+    // ── Fetch & Render Comments Stream ───────────────────────────────────────
+    async function fetchComments() {
+      if (isFetching) return;
+      isFetching = true;
+
+      try {
+        const res = await fetch(`/api/comments?article=${encodeURIComponent(String(articleId))}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+
+        if (!res.ok) {
+          if (streamLoading) streamLoading.style.display = 'none';
+          return;
+        }
+
+        const data = await res.json();
+        const comments = data.comments || [];
+        const totalCount = data.totalCount ?? comments.length;
+
+        // Update count badge
+        if (countNumber) countNumber.textContent = String(totalCount);
+        if (countLabel) countLabel.textContent = totalCount === 1 ? 'Comment' : 'Comments';
+
+        if (streamLoading) streamLoading.style.display = 'none';
+
+        if (comments.length === 0) {
+          if (streamEmpty) streamEmpty.style.display = 'block';
+          if (streamTree) streamTree.innerHTML = '';
+        } else {
+          if (streamEmpty) streamEmpty.style.display = 'none';
+          if (streamTree) {
+            streamTree.innerHTML = '';
+            comments.forEach((rootComment: any) => {
+              streamTree.appendChild(renderCommentItem(rootComment));
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[Discussion] Polling error:', err);
+        if (streamLoading) streamLoading.style.display = 'none';
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    // ── Automatic 20s Polling with Visibility Awareness ──────────────────────
+    function startPolling() {
+      stopPolling();
+      pollIntervalId = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          fetchComments();
+        }
+      }, 20_000);
+    }
+
+    function stopPolling() {
+      if (pollIntervalId) {
+        clearInterval(pollIntervalId);
+        pollIntervalId = null;
+      }
+    }
+
+    // Tab visibility handler: pause while hidden, immediately refresh when active
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        fetchComments();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    });
+
+    // Clean up when unmounting
+    window.addEventListener('beforeunload', stopPolling);
+
+    // Initial Execution
+    checkAuthSession().then(() => {
+      fetchComments();
+      startPolling();
+    });
+  })();
+</script>
+
+<style>
+  .discussion-section {
+    padding-block: var(--space-12) var(--space-20);
+    max-width: var(--max-width-narrow);
+    margin-inline: auto;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+  }
+
+  .discussion-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin-bottom: var(--space-10);
+  }
+
+  .discussion-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .discussion-header__main {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+
+  .discussion-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    letter-spacing: var(--ls-tight);
+    color: var(--color-text-primary);
+  }
+
+  .discussion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    color: var(--color-text-tertiary);
+    background: var(--color-surface-hover);
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .discussion-subtitle {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-normal);
+  }
+
+  /* ── Auth State Bar ── */
+  .discussion-auth {
+    margin-bottom: var(--space-8);
+  }
+
+  .auth-loading-skeleton {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .skeleton-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-border);
+    animation: pulse 1.5s infinite;
+  }
+
+  .skeleton-text {
+    width: 140px;
+    height: 16px;
+    border-radius: var(--radius-sm);
+    background: var(--color-border);
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.9; }
+  }
+
+  .signed-in-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .user-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-grow: 1;
+  }
+
+  .user-name {
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    color: var(--color-text-primary);
+  }
+
+  .user-badge-admin {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    background: var(--color-accent);
+    color: #FFFFFF;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .btn-logout {
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+    transition: color var(--dur-fast);
+  }
+
+  .btn-logout:hover {
+    color: var(--color-accent);
+  }
+
+  .sign-in-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  @media (min-width: 640px) {
+    .sign-in-prompt {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .sign-in-prompt__text {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .btn-google-login {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-5);
+    background: #FFFFFF;
+    color: #3C4043;
+    border: 1px solid #DADCE0;
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(60, 64, 67, 0.08);
+    transition: background var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+
+  .btn-google-login:hover {
+    background: #F8F9FA;
+    border-color: #C6C8CA;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
+  }
+
+  /* ── Composer Form ── */
+  .composer-container {
+    margin-bottom: var(--space-10);
+  }
+
+  .comment-composer,
+  .reply-composer {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .reply-composer {
+    margin-top: var(--space-4);
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-strong);
+  }
+
+  .composer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+  }
+
+  .composer-label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    color: var(--color-text-secondary);
+  }
+
+  .char-counter {
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  .char-counter--warn {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+
+  .composer-input-wrap {
+    margin-bottom: var(--space-3);
+  }
+
+  .composer-textarea {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--color-text-primary);
+    line-height: var(--lh-normal);
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+
+  .composer-textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-muted);
+  }
+
+  .composer-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .composer-feedback {
+    font-size: var(--fs-xs);
+    color: var(--color-accent);
+    flex-grow: 1;
+  }
+
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2) var(--space-6);
+    background: var(--color-accent);
+    color: #FFFFFF;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    transition: background var(--dur-fast);
+    position: relative;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-submit.loading .btn-text {
+    visibility: hidden;
+  }
+
+  .btn-submit.loading .btn-spinner {
+    display: block;
+  }
+
+  .btn-spinner {
+    display: none;
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .reply-btns {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .btn-cancel-reply {
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-cancel-reply:hover {
+    color: var(--color-text-primary);
+  }
+
+  /* ── Comments Stream ── */
+  .comments-loading,
+  .comments-empty {
+    text-align: center;
+    padding: var(--space-12) var(--space-4);
+    color: var(--color-text-tertiary);
+  }
+
+  .empty-title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+  }
+
+  .empty-hint {
+    font-size: var(--fs-sm);
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto var(--space-3);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Comment Card ── */
+  .comments-tree {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .comment-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--dur-fast);
+  }
+
+  .comment-card--reply {
+    margin-top: var(--space-3);
+    background: var(--color-surface-hover);
+    border-left: 2px solid var(--color-accent);
+  }
+
+  .comment-card--deleted {
+    opacity: 0.7;
+    background: var(--color-surface-hover);
+  }
+
+  .comment-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-border);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .comment-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .comment-author-name {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  .comment-badge-editor {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-wide);
+    background: var(--color-accent-muted);
+    color: var(--color-accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .comment-timestamp {
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+  }
+
+  .comment-card__body {
+    font-size: var(--fs-sm);
+    line-height: var(--lh-relaxed);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-3);
+    word-break: break-word;
+  }
+
+  .comment-card__body p {
+    margin-bottom: var(--space-2);
+  }
+  .comment-card__body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .comment-deleted-text {
+    font-style: italic;
+    color: var(--color-text-tertiary);
+  }
+
+  .comment-card__toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-xs);
+    color: var(--color-text-tertiary);
+    transition: color var(--dur-fast);
+  }
+
+  .btn-action:hover {
+    color: var(--color-text-primary);
+  }
+
+  .btn-action--delete:hover {
+    color: var(--color-accent);
+  }
+
+  .comment-replies-list {
+    margin-top: var(--space-3);
+    padding-left: var(--space-4);
+    border-left: 1px dashed var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* ── Modal ── */
+  .delete-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+  }
+
+  .delete-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--color-overlay);
+    backdrop-filter: blur(2px);
+  }
+
+  .delete-modal__content {
+    position: relative;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .delete-modal__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-lg);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  .delete-modal__message {
+    font-size: var(--fs-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--lh-normal);
+    margin-bottom: var(--space-6);
+  }
+
+  .delete-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+  }
+
+  .btn-modal {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    transition: background var(--dur-fast);
+  }
+
+  .btn-modal--cancel {
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
+  }
+
+  .btn-modal--cancel:hover {
+    background: var(--color-border);
+  }
+
+  .btn-modal--confirm {
+    background: var(--color-accent);
+    color: #FFFFFF;
+  }
+
+  .btn-modal--confirm:hover {
+    background: var(--color-accent-hover);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-avatar,
+    .skeleton-text,
+    .spinner,
+    .btn-spinner {
+      animation: none;
+    }
+  }
+</style>

@@ -10,6 +10,7 @@ import AuthorBlock from '../components/AuthorBlock.astro';
 import Footer from '../components/Footer.astro';
 import type { Article } from '../lib/cms';
 import { getArticleUrl, getBylineLabel, getBylinePrefix } from '../lib/cms';
+import Discussion from '../components/comments/Discussion.astro';
 
 interface Props {
   article: Article;
@@ -115,6 +116,9 @@ const hasRealCoverImage = Boolean(article.coverImage && !article.coverImage.incl
             )}
           </div>
         )}
+
+        <!-- Editorial Discussion / Comments -->
+        <Discussion articleId={article._id} articleTitle={article.title} />
 
       </div>
 
