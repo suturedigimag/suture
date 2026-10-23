@@ -9,6 +9,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "test": "node --test tests/**/*.test.mjs",
     "astro": "astro"
   },
   "dependencies": {
@@ -17,6 +18,7 @@
     "@astrojs/vercel": "^11.0.3",
     "@types/animejs": "^3.1.13",
     "@use-gesture/react": "^10.3.1",
+    "@wix/comments": "^1.0.220",
     "@wix/data": "^1.0.486",
     "@wix/members": "^1.0.488",
     "@wix/sdk": "^1.21.13",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@types/node": "^26.6.5",
     "typescript": "^6.0.3"
   }
 }
