@@ -33,7 +33,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
       <h2 class="discussion-title">Discussion</h2>
       <span class="discussion-badge" id="comment-count-badge" aria-live="polite">
         <span class="count-number">0</span>
-        <span class="count-label">Comments</span>
+        <span class="count-label">Reflections</span>
       </span>
     </div>
     <p class="discussion-subtitle">
@@ -54,7 +54,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
   <div class="composer-container" id="main-composer-container" style="display: none;">
     <form class="comment-composer" id="main-composer-form">
       <div class="composer-header">
-        <span class="composer-label">Leave a reflection</span>
+        <span class="composer-label">Share a reflection</span>
         <span class="char-counter" id="main-char-counter">0 / 3000</span>
       </div>
 
@@ -65,16 +65,16 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
           class="composer-textarea"
           rows="3"
           maxlength="3000"
-          placeholder="Write your comment or analysis here..."
+          placeholder="Share your perspective or join the discussion..."
           required
-          aria-label="Write a comment"
+          aria-label="Write a reflection"
         ></textarea>
       </div>
 
       <div class="composer-footer">
         <div class="composer-feedback" id="main-composer-feedback" role="alert" aria-live="assertive"></div>
         <button type="submit" class="btn-submit" id="main-submit-btn">
-          <span class="btn-text">Post Comment</span>
+          <span class="btn-text">Post to Discussion</span>
           <span class="btn-spinner" aria-hidden="true"></span>
         </button>
       </div>
@@ -89,8 +89,8 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
     </div>
 
     <div class="comments-empty" id="comments-empty-state" style="display: none;">
-      <p class="empty-title">No comments yet.</p>
-      <p class="empty-hint">Be the first to share your thoughts on this editorial piece.</p>
+      <p class="empty-title">No reflections yet.</p>
+      <p class="empty-hint">Be the first to share your perspective on this editorial piece.</p>
     </div>
 
     <div class="comments-tree" id="comments-tree-list"></div>
@@ -100,9 +100,9 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
   <div class="delete-modal" id="delete-modal" role="dialog" aria-modal="true" aria-hidden="true" style="display: none;">
     <div class="delete-modal__backdrop"></div>
     <div class="delete-modal__content">
-      <h3 class="delete-modal__title">Delete Comment</h3>
+      <h3 class="delete-modal__title">Delete Entry</h3>
       <p class="delete-modal__message">
-        Are you sure you want to remove this comment? This action cannot be undone.
+        Are you sure you want to remove this entry from the discussion? This action cannot be undone.
       </p>
       <div class="delete-modal__actions">
         <button type="button" class="btn-modal btn-modal--cancel" id="cancel-delete-btn">Cancel</button>
@@ -345,12 +345,12 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
           await fetchComments();
         } else {
           if (mainFeedback) {
-            mainFeedback.textContent = data.error || 'Failed to post comment. Please try again.';
+            mainFeedback.textContent = data.error || 'Failed to post reflection. Please try again.';
           }
         }
       } catch {
         if (mainFeedback) {
-          mainFeedback.textContent = 'Network error while posting comment. Please check your connection.';
+          mainFeedback.textContent = 'Network error while posting reflection. Please check your connection.';
         }
       } finally {
         mainSubmitBtn.disabled = false;
@@ -412,7 +412,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
       if (comment.isDeleted) {
         const deletedMsg = document.createElement('p');
         deletedMsg.className = 'comment-deleted-text';
-        deletedMsg.textContent = comment.content || '[This comment has been removed]';
+        deletedMsg.textContent = comment.content || '[This reflection has been removed]';
         body.appendChild(deletedMsg);
       } else {
         body.appendChild(createSafeParagraphs(comment.content));
@@ -428,6 +428,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
         const replyBtn = document.createElement('button');
         replyBtn.type = 'button';
         replyBtn.className = 'btn-action btn-action--reply';
+        replyBtn.setAttribute('aria-label', 'Reply to reflection');
         replyBtn.innerHTML = `
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
           <span>Reply</span>
@@ -443,6 +444,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
           const deleteBtn = document.createElement('button');
           deleteBtn.type = 'button';
           deleteBtn.className = 'btn-action btn-action--delete';
+          deleteBtn.setAttribute('aria-label', 'Delete reflection');
           deleteBtn.innerHTML = `
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>Delete</span>
@@ -484,7 +486,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
       form.className = 'reply-composer';
       form.innerHTML = `
         <div class="composer-header">
-          <span class="composer-label">Replying to comment</span>
+          <span class="composer-label">Replying to reflection</span>
           <span class="char-counter reply-char-counter">0 / 3000</span>
         </div>
         <div class="composer-input-wrap">
@@ -612,10 +614,10 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
           await fetchComments();
         } else {
           const data = await res.json().catch(() => ({}));
-          alert(data.error || 'Failed to delete comment.');
+          alert(data.error || 'Failed to delete entry.');
         }
       } catch {
-        alert('Network error while deleting comment.');
+        alert('Network error while deleting entry.');
       } finally {
         confirmDeleteBtn.disabled = false;
         confirmDeleteBtn.textContent = 'Delete';
@@ -644,7 +646,7 @@ const loginUrl = `/api/auth/login?redirect=${encodeURIComponent(currentPath)}`;
 
         // Update count badge
         if (countNumber) countNumber.textContent = String(totalCount);
-        if (countLabel) countLabel.textContent = totalCount === 1 ? 'Comment' : 'Comments';
+        if (countLabel) countLabel.textContent = totalCount === 1 ? 'Reflection' : 'Reflections';
 
         if (streamLoading) streamLoading.style.display = 'none';
 

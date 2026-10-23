@@ -76,7 +76,23 @@ export async function createGoogleAuthUrl(redirectUri: string, originalUri: stri
   const client = getPublicWixClient();
   const oAuthData = client.auth.generateOAuthData(redirectUri, originalUri) as StoredOAuthData;
   const { authUrl } = await client.auth.getAuthUrl(oAuthData, { idp: 'google' });
-  return { oAuthData, authUrl };
+
+  // When a custom domain is connected to a headless frontend on Vercel,
+  // Wix SDK returns the site's primary domain (e.g. https://www.psglitclub.com/_api/oauth2/authorize).
+  // Visiting that domain hits Vercel instead of Wix, returning a 404 Not Found.
+  // Directing the browser to Wix's official OAuth authorization host (auth.wix.com) ensures
+  // the request is handled by Wix's identity provider.
+  let targetAuthUrl = authUrl;
+  try {
+    const parsed = new URL(authUrl);
+    parsed.protocol = 'https:';
+    parsed.host = 'auth.wix.com';
+    targetAuthUrl = parsed.toString();
+  } catch {
+    // Keep original if parsing fails
+  }
+
+  return { oAuthData, authUrl: targetAuthUrl };
 }
 
 /**
