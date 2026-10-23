@@ -43,14 +43,13 @@ In the Wix Developers Center / Wix Studio Dashboard:
 
 ---
 
-## 4. Enabling Google Sign-In in Wix
+## 4. Google Sign-In in Wix Headless
 
-1. In the Wix Dashboard, navigate to **Settings** &rarr; **Member Signup & Login** (or **Headless Settings** &rarr; **Identity Providers**).
-2. Toggle **Sign in with Google** to **Enabled**.
-3. If using custom Google OAuth credentials:
-   - Provide your **Google Client ID** and **Client Secret** obtained from Google Cloud Console.
-   - Configure the authorized redirect URI in Google Cloud Console as instructed by Wix: `https://www.psglitclub.com/_api/oauth/callback` (or your site's Wix OAuth redirect domain).
-4. Wix automatically manages the Google OAuth exchange server-side and issues standard Wix Member tokens (`accessToken`, `refreshToken`) to the frontend upon callback completion.
+In **Wix Headless**, you **do not** need to toggle Google Sign-In on or create Google Cloud Console credentials:
+1. Wix Headless includes Google as an identity provider (`idp: 'google'`) natively.
+2. When the user clicks "Continue with Google", our backend calls `client.auth.getAuthUrl(oAuthData, { idp: 'google' })`.
+3. Wix manages the Google identity exchange through `auth.wix.com` automatically.
+4. As long as your **Allowed Authorization Redirect URIs** are registered in Step 3, Wix will process the Google authentication and return authorization tokens to `/api/auth/callback`.
 
 ---
 
